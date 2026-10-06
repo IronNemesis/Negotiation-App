@@ -9,14 +9,14 @@
 
 ## 1. Task Description
 
-T1 starts every Stage 1 run. It reads the section's roster, the section's Pairing History workbook, and the requested simulation's row in Simulation Settings, then hands a clean snapshot to the rest of the workflow. Pairing is only as good as the history it starts from, so T1 applies fixed rules instead of judgment. A student is pairable when they have a roster row with a student ID and a name. Duplicate student IDs are not merged automatically; they stop the run, because pairing the wrong record would corrupt the history. Each student's existing pair IDs are read exactly as the Instructor recorded them, and T1 learns the format of her pair IDs (for example, `UC-01` or plain numbers) so T5 can continue it. T1 does not change any file.
+T1 starts every Stage 1 run. It reads the section's roster, the section's Pairing History workbook, and the requested simulation's row in Simulation Settings, then hands a clean snapshot to the rest of the workflow. Pairing is only as good as the history it starts from, so T1 applies fixed rules instead of judgment. A student is pairable when they have a roster row with a student ID, a name, and, when the roster has a status column, a status of "Enrolled." Students with any other status (for example, "Dropped") are excluded from pairing. Their Pairing History rows are still read, so their past partners remain on record, and they are listed as "in history, not enrolled." Duplicate student IDs are not merged automatically; they stop the run, because pairing the wrong record would corrupt the history. Each student's existing pair IDs are read exactly as the Instructor recorded them, and T1 learns the format of her pair IDs (for example, `UC-01` or plain numbers) so T5 can continue it. T1 does not change any file.
 
 ## 2. Inputs
 
 ### Input 1
 
 - **Input name:** Section roster
-- **Contents and format:** `Roster.xlsx` in the section folder: one row per student with student ID, first name, last name, and email address. Extra columns are ignored.
+- **Contents and format:** `Roster.xlsx` in the section folder: one row per student with student ID, name, email address, and enrollment status. Extra columns are ignored.
 - **Source:** The Instructor, who saves the official roster export into the section folder at the start of the term.
 
 ### Input 2
@@ -37,7 +37,7 @@ T1 starts every Stage 1 run. It reads the section's roster, the section's Pairin
 - **Contents and format:** The Instructor's chat request: section, simulation name, and the list of absent students as she wrote it.
 - **Source:** The Instructor, in the Claude desktop app.
 
-- **If a required input is missing or invalid:** If the roster or Pairing History cannot be read, the simulation is not listed in Simulation Settings, the roster contains duplicate student IDs, or the pair-ID format cannot be determined from the Pairing History, T1 stops with status "Retrieval failed" and the case goes to H1: Resolve Section Data Issue. No pairing is produced from missing or ambiguous data. Individual roster rows without a student ID do not stop the run; they are excluded from pairing and listed in the snapshot.
+- **If a required input is missing or invalid:** If the roster or Pairing History cannot be read, the simulation is not listed in Simulation Settings, the roster contains duplicate student IDs, or the pair-ID format cannot be determined from the Pairing History, T1 stops with status "Retrieval failed" and the case goes to H1: Resolve Section Data Issue. No pairing is produced from missing or ambiguous data. Individual roster rows without a student ID, or with a status other than "Enrolled," do not stop the run; they are excluded from pairing and listed in the snapshot with the reason.
 
 ## 3. Outputs
 
