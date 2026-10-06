@@ -9,7 +9,7 @@
 
 ## 1. Task Description
 
-T5 adds the approved pairing to the section's Pairing History workbook, so future pairings avoid these partners. It gives each pair a new pair ID in the Instructor's existing format, continuing from the highest ID already used, and attaches that ID to both students the same way she does today. When the history records roles, T5 records each student's role as well. Students in a group of three share one pair ID; a student who observed or partnered with the Instructor receives no pair ID this round. T5 only adds; it never changes or removes an existing pair ID. Before writing, it saves a dated copy of the workbook in the Backups folder, so any recording can be undone by restoring that copy.
+T5 adds the approved pairing to the section's Pairing History workbook, so future pairings avoid these partners. It gives each pair a new pair ID in the Instructor's existing format, continuing from the highest ID already used, and attaches that ID to both students the same way she does today. When the history records roles, T5 records each student's role as well. The new entries go in new columns placed after the last existing negotiation, labeled `<M/D> <Simulation> Pair ID` and, if roles are tracked, `<M/D> <Simulation> Role` (for example, `10/14 Used Car Pair ID`), using the date of the negotiation and the existing header row's formatting. If columns with that label already exist, the pairing has already been recorded and T5 does not write again. Students in a group of three share one pair ID; a student who observed or partnered with the Instructor receives no pair ID this round. T5 only adds; it never changes or removes an existing pair ID. Before writing, it saves a dated copy of the workbook in the Backups folder, so any recording can be undone by restoring that copy.
 
 ## 2. Inputs
 
@@ -32,7 +32,7 @@ T5 adds the approved pairing to the section's Pairing History workbook, so futur
 ### Output 1
 
 - **Output name:** Updated Pairing History
-- **Contents and format:** `Pairing History.xlsx` with the new pair ID (and role, if tracked) added for every paired student, plus a backup copy named `Pairing History <date> <time> before <simulation>.xlsx` in Backups.
+- **Contents and format:** `Pairing History.xlsx` with new `<M/D> <Simulation> Pair ID` (and `Role`, if tracked) columns filled in for every paired student and left blank for absent or observing students, plus a backup copy named `Pairing History <date> <time> before <simulation>.xlsx` in Backups.
 - **Next task or recipient:** T6: Build Role Mail Merge Workbook; future T1 runs.
 - **Complete when:** The backup exists, every paired student has exactly one new ID for this simulation, every new ID is shared by exactly the members of one approved pair or group, and a read-back of the saved workbook matches the approved pairing.
 
