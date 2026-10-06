@@ -1,0 +1,62 @@
+{
+  "skill_name": "negotiation-pairing-solution",
+  "notes": "Each eval runs against a fresh copy of negotiation_agent/examples/Negotiation Pairing Solution. Eval 3 needs a recorded Used Car 2026-10-14 pairing for Section 01 (pair --seed 11 with Mateo Flores absent, record, mailmerge) plus Survey Export.csv from examples/test_tools/make_fake_survey.py. The instructor's answers to checkpoint questions are given in each prompt, because the instructor is not available during automated runs.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "pair-with-absences",
+      "prompt": "Pair Fall 2026 Section 01 for the Used Car negotiation on 10/14 (2026). Mateo Flores, Katie Nguyen, and Alex are out. Then get the role emails ready. [Instructor answers: 'Alex' means Alex Kim; 'Katie Nguyen' is Katherine Nguyen; approve as-is if there are no repeat partners; accept role-balance warnings.]",
+      "expected_output": "22 students in 11 Buyer/Seller pairs with no repeat partners; Mateo, Katherine, Alex Kim, Rohan Patel (dropped) and Liam Brennan (no ID) not paired; new pair ID and role columns added to Pairing History after a backup; Role Mail Merge workbook with 22 rows; instructor told Chidi Okafor has no email.",
+      "files": ["examples/Negotiation Pairing Solution"],
+      "assertions": [
+        "Pairing recorded in Pairing History as a new pair-ID column",
+        "Existing Pairing History cells left unchanged",
+        "Pairing History backed up before writing",
+        "22 students paired, each exactly once",
+        "Absent, dropped, and no-ID students are not paired",
+        "No repeat partners from earlier negotiations",
+        "All groups are pairs",
+        "Every pair has one Buyer and one Seller",
+        "Mail merge workbook with Email and Role columns, one row per paired student",
+        "Instructor told Chidi Okafor has no email"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "odd-count-trio",
+      "prompt": "can you set up partners for section 1's used car negotiation on wednesday 10/21/2026? everyone's here [Instructor answers: if the count is odd, make one group of three with two Sellers and one Buyer; approve as-is if there are no repeat partners.]",
+      "expected_output": "Odd count (25) noticed and resolved with one group of three (two Sellers, one Buyer); no repeat partners; pairing recorded; mail merge workbook with 25 rows.",
+      "files": ["examples/Negotiation Pairing Solution"],
+      "assertions": [
+        "Pairing recorded in Pairing History as a new pair-ID column",
+        "Existing Pairing History cells left unchanged",
+        "Pairing History backed up before writing",
+        "25 students paired, each exactly once",
+        "Absent, dropped, and no-ID students are not paired",
+        "No repeat partners from earlier negotiations",
+        "Exactly one group of three with two Sellers and one Buyer",
+        "Every pair has one Buyer and one Seller",
+        "Mail merge workbook with Email and Role columns, one row per paired student",
+        "Instructor told Chidi Okafor has no email"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "outcomes-from-survey",
+      "prompt": "I just saved the Qualtrics export into the Section 01 Used Car 10/14 folder. Can you build my outcomes sheet for class? [Instructor answers: duplicates use the latest submission; an unmatched student ID belongs to the suggested student who has no other response.]",
+      "expected_output": "Outcomes workbook from the template with 24 students in pairing order, partners adjacent, survey values copied exactly (latest duplicate, mistyped ID assigned to Brianna Walker), preview response excluded, non-responders kept with blank values, formulas intact, Final Price blank.",
+      "files": ["fixture: recorded Used Car 2026-10-14 pairing plus Survey Export.csv"],
+      "assertions": [
+        "Outcomes workbook created in the simulation folder",
+        "24 students listed",
+        "Partners on adjacent rows",
+        "Template Surplus formulas left intact",
+        "Final Price column left blank for class",
+        "Survey values copied exactly (latest duplicate; mistyped ID assigned to Brianna Walker; no-response rows blank)",
+        "Preview response not included",
+        "Students without a response still listed (Hannah Fischer, Arjun Singh)",
+        "Sofia Delgado matched despite the lost leading zero"
+      ]
+    }
+  ]
+}
