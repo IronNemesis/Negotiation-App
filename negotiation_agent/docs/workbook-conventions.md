@@ -16,6 +16,10 @@ One Excel workbook per course and term (for example `BUS 4489 F26 Roster.xlsx`).
 
 Students are identified by **name** (`Last, First`, as on the class list) and **Cal Poly email**. There are no student ID numbers.
 
+Names on her simulation tabs don't always match the class list exactly: a shortened first name ("Zach" on the tabs, "Zachary" on the class list), a different first name (a draft listing a student's legal first name where the final table uses her preferred one), or a student who dropped after the draft. The skills link a tab name to a class-list student by exact name, then email, then a known nickname with a unique last name. A unique last name with a different first name is reported as "likely" for her to confirm, never assumed.
+
+Some header cells are blank even though the column has content: on her `SL` tab, the second role's email column has no `Email` header. The skills recognize a blank-headed column as the email column when its cells hold email addresses.
+
 ## Simulation Codes and Pair IDs
 
 Each simulation has a two-letter code: `UC` is Used Car, `SL` is the salary negotiation, and so on. Every match gets a pair ID made of the code and the match number:

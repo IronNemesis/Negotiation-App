@@ -1,0 +1,534 @@
+{
+  "class_size": 39,
+  "draft": [
+    {
+      "match": 1,
+      "BUYER": [
+        "Adebayo, Tolu"
+      ],
+      "SELLER": [
+        "Mendes, Rafael"
+      ]
+    },
+    {
+      "match": 2,
+      "BUYER": [
+        "Alvarez, Maya"
+      ],
+      "SELLER": [
+        "Nakamura, Ren"
+      ]
+    },
+    {
+      "match": 3,
+      "BUYER": [
+        "Bennett, Owen"
+      ],
+      "SELLER": [
+        "Nguyen, Katherine"
+      ]
+    },
+    {
+      "match": 4,
+      "BUYER": [
+        "Brooks, Tyler"
+      ],
+      "SELLER": [
+        "Novak, Ben"
+      ]
+    },
+    {
+      "match": 5,
+      "BUYER": [
+        "Castellano, Rosa"
+      ],
+      "SELLER": [
+        "O'Neill, Siobhan"
+      ]
+    },
+    {
+      "match": 6,
+      "BUYER": [
+        "Chen, Priya"
+      ],
+      "SELLER": [
+        "Ortiz, Lena"
+      ]
+    },
+    {
+      "match": 7,
+      "BUYER": [
+        "Dawson, Leah"
+      ],
+      "SELLER": [
+        "Park, Daniel"
+      ]
+    },
+    {
+      "match": 8,
+      "BUYER": [
+        "Delgado, Marco"
+      ],
+      "SELLER": [
+        "Park, Danielle"
+      ]
+    },
+    {
+      "match": 9,
+      "BUYER": [
+        "Evans, Jordan"
+      ],
+      "SELLER": [
+        "Quinn, Ava"
+      ]
+    },
+    {
+      "match": 10,
+      "BUYER": [
+        "Fitzgerald, Nora"
+      ],
+      "SELLER": [
+        "Reyes, Noor"
+      ]
+    },
+    {
+      "match": 11,
+      "BUYER": [
+        "García, Mateo"
+      ],
+      "SELLER": [
+        "Rossi, Gianna"
+      ]
+    },
+    {
+      "match": 12,
+      "BUYER": [
+        "Hale, Simone"
+      ],
+      "SELLER": [
+        "Sato, Hiro"
+      ]
+    },
+    {
+      "match": 13,
+      "BUYER": [
+        "Hoang, Minh"
+      ],
+      "SELLER": [
+        "Shah, Dev"
+      ]
+    },
+    {
+      "match": 14,
+      "BUYER": [
+        "Ibarra, Lucia"
+      ],
+      "SELLER": [
+        "Silva, Kai"
+      ]
+    },
+    {
+      "match": 15,
+      "BUYER": [
+        "Jensen, Kai"
+      ],
+      "SELLER": [
+        "Thornton, Jack"
+      ]
+    },
+    {
+      "match": 16,
+      "BUYER": [
+        "Kowalski, Andy"
+      ],
+      "SELLER": [
+        "Underwood, Mia"
+      ]
+    },
+    {
+      "match": 17,
+      "BUYER": [
+        "Laurent, Camille"
+      ],
+      "SELLER": [
+        "Van der Berg, Elise"
+      ]
+    },
+    {
+      "match": 18,
+      "BUYER": [
+        "Lindqvist, Erik"
+      ],
+      "SELLER": [
+        "Walsh, Connor"
+      ]
+    },
+    {
+      "match": 19,
+      "BUYER": [
+        "Mahoney, Grace"
+      ],
+      "SELLER": [
+        "Yilmaz, Deniz",
+        "Zimmerman, Tess"
+      ]
+    }
+  ],
+  "absent_in_class": [
+    "Adebayo, Tolu",
+    "Castellano, Rosa",
+    "Zimmerman, Tess"
+  ],
+  "final": [
+    {
+      "match": 2,
+      "BUYER": [
+        "Alvarez, Maya"
+      ],
+      "SELLER": [
+        "Nakamura, Ren",
+        "Mendes, Rafael"
+      ]
+    },
+    {
+      "match": 3,
+      "BUYER": [
+        "Bennett, Owen"
+      ],
+      "SELLER": [
+        "Nguyen, Katherine"
+      ]
+    },
+    {
+      "match": 4,
+      "BUYER": [
+        "Brooks, Tyler"
+      ],
+      "SELLER": [
+        "Novak, Ben",
+        "O'Neill, Siobhan"
+      ]
+    },
+    {
+      "match": 6,
+      "BUYER": [
+        "Chen, Priya"
+      ],
+      "SELLER": [
+        "Ortiz, Lena"
+      ]
+    },
+    {
+      "match": 7,
+      "BUYER": [
+        "Dawson, Leah"
+      ],
+      "SELLER": [
+        "Park, Daniel"
+      ]
+    },
+    {
+      "match": 8,
+      "BUYER": [
+        "Delgado, Marco"
+      ],
+      "SELLER": [
+        "Park, Danielle"
+      ]
+    },
+    {
+      "match": 9,
+      "BUYER": [
+        "Evans, Jordan"
+      ],
+      "SELLER": [
+        "Quinn, Ava"
+      ]
+    },
+    {
+      "match": 10,
+      "BUYER": [
+        "Fitzgerald, Nora"
+      ],
+      "SELLER": [
+        "Reyes, Noor"
+      ]
+    },
+    {
+      "match": 11,
+      "BUYER": [
+        "García, Mateo"
+      ],
+      "SELLER": [
+        "Rossi, Gianna"
+      ]
+    },
+    {
+      "match": 12,
+      "BUYER": [
+        "Hale, Simone"
+      ],
+      "SELLER": [
+        "Sato, Hiro"
+      ]
+    },
+    {
+      "match": 13,
+      "BUYER": [
+        "Hoang, Minh"
+      ],
+      "SELLER": [
+        "Shah, Dev"
+      ]
+    },
+    {
+      "match": 14,
+      "BUYER": [
+        "Ibarra, Lucia"
+      ],
+      "SELLER": [
+        "Silva, Kai"
+      ]
+    },
+    {
+      "match": 15,
+      "BUYER": [
+        "Jensen, Kai"
+      ],
+      "SELLER": [
+        "Thornton, Jack"
+      ]
+    },
+    {
+      "match": 16,
+      "BUYER": [
+        "Kowalski, Andy"
+      ],
+      "SELLER": [
+        "Underwood, Mia"
+      ]
+    },
+    {
+      "match": 17,
+      "BUYER": [
+        "Laurent, Camille"
+      ],
+      "SELLER": [
+        "Van der Berg, Elise"
+      ]
+    },
+    {
+      "match": 18,
+      "BUYER": [
+        "Lindqvist, Erik"
+      ],
+      "SELLER": [
+        "Walsh, Connor"
+      ]
+    },
+    {
+      "match": 19,
+      "BUYER": [
+        "Mahoney, Grace"
+      ],
+      "SELLER": [
+        "Yilmaz, Deniz"
+      ]
+    }
+  ],
+  "survey": {
+    "rows_in_export": 39,
+    "blank_rows": 1,
+    "preview_rows": 1,
+    "students": {
+      "Adebayo, Tolu": {
+        "response": "none"
+      },
+      "Alvarez, Maya": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Bennett, Owen": {
+        "response": "none"
+      },
+      "Brooks, Tyler": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Castellano, Rosa": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Chen, Priya": {
+        "match": "exact",
+        "flags": {}
+      },
+      "Dawson, Leah": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Delgado, Marco": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Evans, Jordan": {
+        "match": "ask (misspelled last name)",
+        "flags": {}
+      },
+      "Fitzgerald, Nora": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "García, Mateo": {
+        "match": "exact (accent ignored)",
+        "flags": {}
+      },
+      "Hale, Simone": {
+        "match": "exact (submitted twice)",
+        "flags": {}
+      },
+      "Hoang, Minh": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Ibarra, Lucia": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Jensen, Kai": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Kowalski, Andy": {
+        "match": "nickname",
+        "flags": {}
+      },
+      "Laurent, Camille": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Lindqvist, Erik": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Mahoney, Grace": {
+        "match": "exact",
+        "flags": {}
+      },
+      "Mendes, Rafael": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Nakamura, Ren": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Nguyen, Katherine": {
+        "match": "nickname",
+        "flags": {}
+      },
+      "Novak, Ben": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "O'Neill, Siobhan": {
+        "match": "exact (curly apostrophe ignored)",
+        "flags": {}
+      },
+      "Ortiz, Lena": {
+        "match": "exact",
+        "flags": {}
+      },
+      "Park, Daniel": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Park, Danielle": {
+        "match": "ask (two Parks)",
+        "flags": {}
+      },
+      "Quinn, Ava": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Reyes, Noor": {
+        "match": "exact or email",
+        "flags": {
+          "TARGET": [
+            "corrected",
+            10000
+          ]
+        }
+      },
+      "Rossi, Gianna": {
+        "match": "exact or email",
+        "flags": {
+          "TARGET": [
+            "unclear",
+            "$10,500-10,250"
+          ]
+        }
+      },
+      "Sato, Hiro": {
+        "match": "exact or email",
+        "flags": {
+          "BATNA": [
+            "out_of_range",
+            200
+          ]
+        }
+      },
+      "Shah, Dev": {
+        "match": "exact",
+        "flags": {
+          "ROLE": [
+            "role_conflict",
+            2
+          ]
+        }
+      },
+      "Silva, Kai": {
+        "match": "exact or email",
+        "flags": {
+          "RESERVATION": [
+            "unclear",
+            ">8,800"
+          ]
+        }
+      },
+      "Thornton, Jack": {
+        "match": "exact or email",
+        "flags": {
+          "BATNA": [
+            "unclear",
+            "$8,800 (sell to dealer)"
+          ]
+        }
+      },
+      "Underwood, Mia": {
+        "response": "none"
+      },
+      "Van der Berg, Elise": {
+        "match": "exact",
+        "flags": {}
+      },
+      "Walsh, Connor": {
+        "match": "exact or email",
+        "flags": {
+          "BATNA": [
+            "corrected",
+            8800
+          ]
+        }
+      },
+      "Yilmaz, Deniz": {
+        "match": "exact or email",
+        "flags": {}
+      },
+      "Zimmerman, Tess": {
+        "match": "exact or email",
+        "flags": {}
+      }
+    }
+  }
+}
