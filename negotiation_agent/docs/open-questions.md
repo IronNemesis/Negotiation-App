@@ -17,7 +17,15 @@ The workflow is built from two interviews and three of the instructor's files: h
 | Would she require students to enter their Cal Poly email in the Qualtrics survey (or pick their name from a list)? | Not required; matching uses names and whatever email they give. | T7, H4 |
 | Does she prepare the UC tab in advance the same way as the VA tab (headers and match numbers filled in)? | Yes; the skill fills in her prepared tab and stops if it is missing or too short. | T1, T4, T9 |
 | Should students switch roles across simulations? | Ignored for now. Her method keeps the same alphabetical halves. | T2 |
+| Her UC draft lists a student by one first name and the final table and class list by another (a legal vs. preferred name). Which name should the skills write on new tabs? | The class-list name is written; other variants are linked when confident and otherwise reported for her to confirm. | T1, T4, T9 |
+| A student in her UC draft no longer appears on the class list (dropped before class). Should the skills warn when a drafted student has since left the class? | Yes: T3 reports it as an error before the final matches are written. | T3, T9 |
 | Are the proposed time target (about 5 minutes per simulation) and highlight colors (orange for corrected typos, light red for unclear answers) acceptable to her? | Yes. | README, T6, T8 |
+
+## For Aidan
+
+| Item | Status |
+|---|---|
+| Open a copy of her workbook that has been saved by openpyxl in desktop Excel (ideally Windows) and confirm it opens without a repair prompt. `shared/tools/roundtrip_check.py` confirmed nothing in the content is lost; only Excel itself can confirm the file opens cleanly. | To do before the skills write to her real workbook |
 
 ## Decided
 
