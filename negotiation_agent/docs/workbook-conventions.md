@@ -121,7 +121,7 @@ The instructor's finished sheet, named like `BUS 4489 F26 Week 2 - Used Car Barg
 | Color | Meaning |
 |---|---|
 | Yellow | The instructor's in-class columns (`ACTUAL IO`), as in her own sheets |
-| Orange | An obvious typo the skill corrected; the original answer is in a cell comment |
+| Orange | An obvious fix the skill made (a typo like `10` for 10,000, `8.8K`, or a number followed by a note such as `$8,800 (sell to dealer)`); the original answer is in a cell comment |
 | Light red | An unclear answer kept exactly as typed, for her to read |
 
 A short legend on the sheet explains the colors.

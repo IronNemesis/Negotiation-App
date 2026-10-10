@@ -500,8 +500,8 @@
         "match": "exact or email",
         "flags": {
           "BATNA": [
-            "unclear",
-            "$8,800 (sell to dealer)"
+            "corrected",
+            8800
           ]
         }
       },
