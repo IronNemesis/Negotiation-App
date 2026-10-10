@@ -14,10 +14,11 @@ Students type their answers freely, so the export arrives as `13000`, `$13000`, 
 The rules, applied to the four price questions (initial offer, target, reservation, BATNA):
 
 1. **Plain numbers:** remove spaces, `$`, and thousands commas. If what remains is a number, store it as a number, with no highlight. `$13,000` becomes 13000.
-2. **Obvious typos:** two forms are corrected and highlighted **orange**, with the original answer in a comment:
+2. **Obvious fixes:** three forms are corrected and highlighted **orange**, with the original answer in a comment:
    - a number below 100, which is multiplied by 1,000 (`10` becomes 10000, `9.4` becomes 9400);
-   - a number written with `k`, which is expanded (`8.8K` becomes 8800).
-3. **Unclear answers:** anything that is not a plain number after rule 1 is **kept exactly as typed** and highlighted **light red**: `>8,800`, `$10,500-10,250`, `$8,800 (sell to dealer)`. These stay hers to interpret.
+   - a number written with `k`, which is expanded (`8.8K` becomes 8800);
+   - a number followed by a note in parentheses, which keeps the number (`$8,800 (sell to dealer)` becomes 8800). This is how the instructor treated it in her own sheet.
+3. **Unclear answers:** anything else that is not a plain number after rule 1 is **kept exactly as typed** and highlighted **light red**: `>8,800`, `$10,500-10,250`. These stay hers to interpret.
 4. **Out of range:** a plain number outside the simulation's usual range (set in the skill's settings; for example $1,000–$50,000 for Used Car) is kept as typed and highlighted **light red** with a comment, because it may be intentional. An example is a BATNA of 200.
 
 Other columns:

@@ -6,6 +6,7 @@ Run from the repo root:
 
 Writes, under negotiation_agent/examples/:
   BUS 4489 F26 Roster - before Used Car.xlsx   UC and SL tabs prepared but empty
+  BUS 4489 F26 Roster - Used Car drafted.xlsx  UC draft table filled in, final table still empty (before class)
   BUS 4489 F26 Roster - after Used Car.xlsx    UC draft and final filled in (with absences), SL prepared
   BUS+4489+F26+Week+2+-+Used+Car+Bargaining+Range_October+14,+2026_14.40.csv
   expected/used-car.json                        the results each skill should produce
@@ -160,8 +161,10 @@ def add_prepared_tab(wb: Workbook, code: str, role_a: str, role_b: str, prior: l
         ws.column_dimensions[c].width = 22
 
 
-def fill_used_car(ws, draft: list[dict], final: list[dict], absent: list[str]) -> None:
-    """Fill the UC tab the way the skills should: draft table at the bottom, final table at the top."""
+def fill_used_car(ws, draft: list[dict], final: list[dict] | None, absent: list[str]) -> None:
+    """Fill the UC tab the way the skills should: draft table at the bottom, final table at the top.
+
+    With final=None only the draft is written, which is how the tab looks before class."""
     r = 30
     for m in draft:
         ws.cell(r, 1, m["match"])
@@ -175,6 +178,8 @@ def fill_used_car(ws, draft: list[dict], final: list[dict], absent: list[str]) -
     for row in range(r, 52):
         if isinstance(ws.cell(row, 1).value, int):
             ws.cell(row, 1).value = None
+    if final is None:
+        return
     r = 2
     for m in final:
         code = f"UC_{m['match']}"
@@ -201,13 +206,15 @@ def fill_used_car(ws, draft: list[dict], final: list[dict], absent: list[str]) -
         r += 1
 
 
-def build_workbook(after: bool, draft, final) -> Workbook:
+def build_workbook(state: str, draft, final) -> Workbook:
     wb = Workbook()
     add_attendance(wb)
     add_exam(wb)
     add_prepared_tab(wb, "UC", "BUYER", "SELLER", [])
     add_prepared_tab(wb, "SL", "SUPERVISOR", "SUBORDINATE", ["UC"])
-    if after:
+    if state == "drafted":
+        fill_used_car(wb["UC"], draft, None, [])
+    elif state == "after":
         fill_used_car(wb["UC"], draft, final, ABSENT_IN_CLASS)
     for ws in wb.worksheets:
         for c in ws[1]:
@@ -265,7 +272,7 @@ SPECIAL = {
     "Rossi, Gianna": {"prices": ("$11,000", "$10,500-10,250", "$9,400", "$8,880"), "first": "Gianna ", "last": "Rossi ",
                       "expect": {"TARGET": ("unclear", "$10,500-10,250")}},
     "Thornton, Jack": {"prices": ("$11,000", "$9,500", "$9,000", "$8,800 (sell to dealer)"),
-                       "expect": {"BATNA": ("unclear", "$8,800 (sell to dealer)")}},
+                       "expect": {"BATNA": ("corrected", 8800)}},
     "Sato, Hiro": {"prices": ("14000", "9600", "9000", "200"), "expect": {"BATNA": ("out_of_range", 200)}},
     "Ortiz, Lena": {"first": "lena", "last": "ortiz", "match": "exact"},
     "Kowalski, Andy": {"first": "Andrew", "email": "andrew.kowalski@example.com", "match": "nickname"},
@@ -350,8 +357,9 @@ def main() -> None:
     draft = draft_matches(CLASS)
     final = apply_absences(draft, ABSENT_IN_CLASS)
     (EXAMPLES / "expected").mkdir(exist_ok=True)
-    build_workbook(False, draft, final).save(EXAMPLES / f"{COURSE} Roster - before Used Car.xlsx")
-    build_workbook(True, draft, final).save(EXAMPLES / f"{COURSE} Roster - after Used Car.xlsx")
+    build_workbook("before", draft, final).save(EXAMPLES / f"{COURSE} Roster - before Used Car.xlsx")
+    build_workbook("drafted", draft, final).save(EXAMPLES / f"{COURSE} Roster - Used Car drafted.xlsx")
+    build_workbook("after", draft, final).save(EXAMPLES / f"{COURSE} Roster - after Used Car.xlsx")
 
     rows, survey_expected = build_survey(draft)
     csv_name = "BUS+4489+F26+Week+2+-+Used+Car+Bargaining+Range_October+14,+2026_14.40.csv"

@@ -13,6 +13,7 @@ python negotiation_agent/examples/tools/make_examples.py
 | File | What it is | Used to test |
 |---|---|---|
 | `BUS 4489 F26 Roster - before Used Car.xlsx` | Her roster workbook before Used Car: class list on `Att - Fall` (39 students), an empty `Att - Spring` template, an exam tab with formulas and a comment, and `UC` and `SL` tabs prepared with headers and match numbers only | Drafting (T1–T5) and that nothing outside the `UC` draft table changes |
+| `BUS 4489 F26 Roster - Used Car drafted.xlsx` | The same workbook a few days before class: the `UC` draft table is filled in, the final table is still empty | The bargaining range sheet built from the draft (before class), and the absence update (T9) |
 | `BUS 4489 F26 Roster - after Used Car.xlsx` | The same workbook after Used Car: draft table and final table filled in, three absent students with `UC_0`, `SL` prepared with a `UC` column | Reading a finished tab, the absence rule (T9), repeat warnings for the next simulation |
 | `BUS+4489+F26+Week+2+-+Used+Car+Bargaining+Range_October+14,+2026_14.40.csv` | A Qualtrics export in her survey's exact format (three header rows, numeric codes) | Cleaning (T6), matching (T7), and the bargaining range sheet (T8) |
 | `expected/used-car.json` | The draft, absences, final matches, and per-student survey expectations | Automated checks of both skills |
@@ -38,7 +39,7 @@ python negotiation_agent/examples/tools/make_examples.py
 | Connor Walsh | BATNA `8.8k` | Corrected to 8,800, orange |
 | Kai Silva | Reservation `>8,800` | Kept as typed, light red |
 | Gianna Rossi | Target `$10,500-10,250`; name typed with trailing spaces | Kept as typed, light red; matched by name |
-| Jack Thornton | BATNA `$8,800 (sell to dealer)` | Kept as typed, light red |
+| Jack Thornton | BATNA `$8,800 (sell to dealer)` | Read as 8,800, orange, original in a comment |
 | Hiro Sato | BATNA `200` | Kept, light red (outside the usual range) |
 | Lena Ortiz | Name typed in lowercase | Matched by name |
 | Andy Kowalski | Typed "Andrew", personal email | Matched as a nickname |

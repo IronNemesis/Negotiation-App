@@ -1,0 +1,16 @@
+{
+  "UC": {
+    "name": "Used Car",
+    "roles": ["BUYER", "SELLER"],
+    "role_codes": {"BUYER": 1, "SELLER": 2},
+    "survey": {
+      "first_name": "Q1",
+      "last_name": "Q2",
+      "role": "Q3",
+      "email": "Q11",
+      "prices": {"INITIAL": "Q4", "TARGET": "Q5", "RESERVATION": "Q6", "BATNA": "Q7"},
+      "items": ["Q12_1", "Q12_2", "Q12_3", "Q12_4", "Q12_5", "Q12_6"]
+    },
+    "price_range": [1000, 50000]
+  }
+}
