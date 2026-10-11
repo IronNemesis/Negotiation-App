@@ -8,9 +8,7 @@ An agentic workflow that takes the repetitive work out of running in-class negot
 - [`negotiation_agent/docs/workbook-conventions.md`](negotiation_agent/docs/workbook-conventions.md): the instructor's workbook, survey, and sheet conventions the skills follow
 - [`negotiation_agent/docs/open-questions.md`](negotiation_agent/docs/open-questions.md): assumptions still to be confirmed with the instructor
 - [`negotiation_agent/archive/prototype-v1/`](negotiation_agent/archive/prototype-v1/): the first prototype, kept for reference
-
+- [`negotiation_agent/skills/negotiation-pairing/`](negotiation_agent/skills/negotiation-pairing/): the skill that drafts matches, builds role BCC lists, and applies absences in class
 - [`negotiation_agent/skills/bargaining-range-sheet/`](negotiation_agent/skills/bargaining-range-sheet/): the skill that cleans the Qualtrics export and builds the bargaining range sheet
 - [`negotiation_agent/examples/`](negotiation_agent/examples/): fictional files in the instructor's formats, with expected results
 - [`negotiation_agent/tests/`](negotiation_agent/tests/): automated tests against the example files
-
-The `negotiation-pairing` skill is next.

@@ -13,7 +13,7 @@ After the Instructor approves the draft, T4 writes it into the draft table (`MAT
 
 - Names go into the rows she prefilled with match numbers, as `Last, First`, exactly as on the class list.
 - A second same-role student goes on the next row, with the match number and the other role left blank.
-- Prefilled match rows that aren't needed are left as they are.
+- Prefilled match numbers in rows that aren't needed are cleared, so the table ends where the matches end, as on her own tabs.
 
 T4 writes only to the draft table. The final table at the top is written later by T9, at the absence step (assumption; see open questions). No other tab and no cell outside the draft table is changed.
 
