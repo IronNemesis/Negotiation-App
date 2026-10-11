@@ -1,0 +1,14 @@
+{
+  "UC": {
+    "name": "Used Car",
+    "roles": ["BUYER", "SELLER"],
+    "draft_method": "alphabetical-halves",
+    "first_of_term": true
+  },
+  "SL": {
+    "name": "Salary negotiation",
+    "roles": ["SUPERVISOR", "SUBORDINATE"],
+    "draft_method": null,
+    "first_of_term": false
+  }
+}
