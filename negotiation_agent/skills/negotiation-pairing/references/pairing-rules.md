@@ -30,7 +30,7 @@
 **Writing the final table:**
 - Rows start under the final header: match number, then each role's name, email, earlier pair IDs, and `<code>_<match>`.
 - Extra same-role students go on the row under their match.
-- One blank row, then absent students with `<code>_0`.
+- One blank row, then absent students with `<code>_0`, each under their own role's columns (students absent from the draft go under the first role).
 - Unused prefilled match numbers above the draft table are cleared.
 - Columns she fills herself (Gender, Intervention) are never written.
 

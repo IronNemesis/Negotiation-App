@@ -79,7 +79,9 @@ If she later asks for a change that alters a student's role, the script refuses 
 
 ## Stage 3: Absences (start of class)
 
-**6. Report absences (H5).** Ask who is absent if she hasn't said. "Nobody" is a valid answer. Pass names as she said them (a last name, a full name, or an email):
+**6. Report absences (H5).** If `snapshot` shows `roles_locked: false` on class day, the role emails were probably sent without being recorded. Ask her once whether they went out, and if so run `roles-sent`. That only adds a line to the log; it doesn't touch her workbook.
+
+Ask who is absent if she hasn't said. "Nobody" is a valid answer. Pass names as she said them (a last name, a full name, or an email):
 
 ```bash
 python scripts/pairing.py absences --roster "<roster>.xlsx" --absent "Evans" --absent "ksilva@example.edu"
@@ -109,7 +111,7 @@ Then tell her to re-run the bargaining range sheet (`bargaining-range-sheet` ski
 
 ## Logging her decisions
 
-Record decisions the script doesn't see, such as a cancellation or a confirmed placement:
+Record decisions the script doesn't see, such as a canceled draft. Options passed to a command (`--place`, `--swap`, `--same-person`) are already logged by that command:
 
 ```bash
 python scripts/pairing.py log --roster "<roster>.xlsx" --step "H2 Draft review" --details "Canceled by the instructor"

@@ -57,6 +57,6 @@ MATCH | FIRST LAST ROLE ACTUAL IO INITIAL TARGET RESERVATION BATNA items×6 | OU
 - **Legend:** a legend under the table explains yellow, orange, and light red.
 - **No response:** a student without a response keeps their row, with a "No survey response" comment on their first name.
 
-Other tabs: `Roles` (`MATCH | BUYER | SELLER`) and `Raw` (the export exactly as downloaded).
+The main tab is named `Week <N> <Simulation>` (for example `Week 2 Used Car`). Other tabs: `Roles` (`MATCH | BUYER | SELLER`) and `Raw` (the export exactly as downloaded).
 
 The file is written to a temporary location, every value is read back and compared, and only then is it copied next to the export. An existing sheet is moved to `Backups` first, unless it has entries in ACTUAL IO or OUTCOME; then the script stops and asks.

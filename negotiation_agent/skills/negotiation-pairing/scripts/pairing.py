@@ -525,8 +525,8 @@ def cmd_absences(args, write: bool = False):
         r += 1
     r += 1
     first_role = ctx.roles[0]
-    for p in absent:
-        write_person(r, p, first_role, f"{ctx.code}_0")
+    for p in absent:  # under their own role's columns; students absent from the draft go under the first role
+        write_person(r, p, p.role if p.role in role_cols else first_role, f"{ctx.code}_0")
         r += 1
     backup = save_and_verify(ctx, written, f"before {ctx.code} final")
     result.update({"written_to": f"'{ctx.code}' final table, rows {region[0]}-{r - 1}", "backup": str(backup)})
