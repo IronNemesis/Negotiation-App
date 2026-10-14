@@ -199,10 +199,12 @@ def fill_used_car(ws, draft: list[dict], final: list[dict] | None, absent: list[
     for row in range(r, 24):
         ws.cell(row, 1).value = None
     r += 1
-    for name in absent:
-        ws.cell(r, 2, name)
-        ws.cell(r, 3, email_for(name))
-        ws.cell(r, 4, "UC_0")
+    role_of = {n: role for m in draft for role in ("BUYER", "SELLER") for n in m[role]}
+    for name in absent:  # listed under their own role's columns
+        col = 2 if role_of.get(name, "BUYER") == "BUYER" else 6
+        ws.cell(r, col, name)
+        ws.cell(r, col + 1, email_for(name))
+        ws.cell(r, col + 2, "UC_0")
         r += 1
 
 

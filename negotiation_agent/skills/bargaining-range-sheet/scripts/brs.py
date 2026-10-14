@@ -483,7 +483,8 @@ def run(args, build: bool):
         previous = ns.backup(out, "replaced")
 
     wb = Workbook()
-    expected = write_sheet(wb, safe_title(export.stem), sim["roles"], groups, item_headers, sim["role_codes"])
+    expected = write_sheet(wb, safe_title(f"Week {args.week} {sim['name']}"), sim["roles"], groups, item_headers,
+                           sim["role_codes"])
     write_roles_tab(wb, sim["roles"], groups)
     write_raw_tab(wb, raw_rows)
     with tempfile.TemporaryDirectory() as tmp:
