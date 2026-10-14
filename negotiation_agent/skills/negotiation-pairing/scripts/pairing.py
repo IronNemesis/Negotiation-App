@@ -443,7 +443,7 @@ def propose_final(ctx: Context, args):
                 earlier = [x for x in final if x < m]
                 later = [x for x in final if x > m]
                 target = earlier[-1] if earlier else (later[0] if later else None)
-                how = "the match just before" if earlier else "the next match (there is no earlier one)"
+                how = "the match just before" if earlier else "the next match, since there is no earlier one"
                 if target is None:
                     raise ns.SkillError("no_match_left", "No complete match is left to join.")
                 too_big = len(final[target]) + 1 > MAX_GROUP
@@ -455,7 +455,7 @@ def propose_final(ctx: Context, args):
                     continue
             final[target].append(p)
             moves.append(f"{p.name} joins match {target} as a second {p.role.title()} because {lost} "
-                         f"(match {m}) is absent ({how}).")
+                         f"(match {m}) is absent; {how}.")
     all_absent = absent + extra_absent
     checks = check_groups(ctx, final, all_absent, "final", draft_roles)
     if needs_placement:
