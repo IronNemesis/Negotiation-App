@@ -198,6 +198,62 @@ def test_a_likely_name_is_still_asked_about_not_treated_as_dropped():
     assert any("may be Bennett, Oliver" in e for e in proposal["errors"]), proposal["errors"]
 
 
+def write_sl_draft(path: Path, rows: list[tuple]) -> None:
+    """Fill the SL draft table by hand, as she might: (match, supervisor, subordinate) per row."""
+    wb = load_workbook(path)
+    tab = ns.read_sim_tab(wb, "SL", ["SUPERVISOR", "SUBORDINATE"])
+    ws = wb["SL"]
+    for i, (match, sup, sub) in enumerate(rows):
+        r = tab.draft_header + 1 + i
+        ws.cell(r, 1).value, ws.cell(r, 2).value, ws.cell(r, 3).value = match, sup, sub
+    wb.save(path)
+
+
+def test_check_warns_when_someone_is_the_one_in_a_1v2_again():
+    folder = workspace()
+    # In Used Car, Maya Alvarez was the only Buyer in match 2, facing two Sellers.
+    write_sl_draft(folder / AFTER, [(1, "Alvarez, Maya", "Shah, Dev"), (None, None, "Silva, Kai")])
+    result = run(folder, "check", "--roster", AFTER, "--simulation", "SL")
+    assert result["ok"]
+    assert any(w.startswith("Alvarez, Maya faces two partners alone in match 1") and "UC_2" in w
+               for w in result["warnings"]), result["warnings"]
+
+
+def test_absence_update_asks_before_making_someone_the_one_again():
+    folder = workspace()
+    # Tyler Brooks was the only Buyer in Used Car match 4. If Ava Quinn is absent, Noor Reyes would join match 1
+    # and leave Tyler facing two partners again, so she is asked instead.
+    write_sl_draft(folder / AFTER, [(1, "Brooks, Tyler", "Shah, Dev"), (2, "Quinn, Ava", "Reyes, Noor")])
+    proposal = run(folder, "absences", "--roster", AFTER, "--simulation", "SL", "--absent", "Quinn")
+    assert proposal["ok"]
+    stuck = proposal["needs_placement"]
+    assert [s["student"] for s in stuck] == ["Reyes, Noor"]
+    assert "Brooks, Tyler would face two partners alone again" in stuck[0]["reason"]
+
+
+def test_draft_moves_the_extra_student_so_nobody_is_the_one_twice():
+    folder = workspace()
+    # A fictional earlier simulation (written on the SL tab) where Grace Mahoney faced two partners alone.
+    wb = load_workbook(folder / BEFORE)
+    ws = wb["SL"]
+    for r, (sup, sup_email, sub, sub_email) in enumerate([
+            ("Mahoney, Grace", "gmahoney@example.edu", "Hale, Simone", "shale@example.edu"),
+            (None, None, "Ibarra, Lucia", "libarra@example.edu")], start=2):
+        ws.cell(r, 1).value = 1 if r == 2 else None
+        if sup:
+            ws.cell(r, 2).value, ws.cell(r, 3).value, ws.cell(r, 5).value = sup, sup_email, "SL_1"
+        ws.cell(r, 6).value, ws.cell(r, 7).value, ws.cell(r, 9).value = sub, sub_email, "SL_1"
+    wb.save(folder / BEFORE)
+    result = run(folder, "draft", "--roster", BEFORE)
+    assert result["ok"] and not result["errors"], result
+    # Normally Tess Zimmerman (the extra Seller) joins Grace Mahoney's match 19; now she joins match 18.
+    draft = {m["match"]: m for m in result["draft"]}
+    assert draft[19]["SELLER"] == ["Yilmaz, Deniz"]
+    assert draft[18]["SELLER"] == ["Walsh, Connor", "Zimmerman, Tess"]
+    assert any("Mahoney, Grace" in n for n in result["placement_notes"])
+    assert not any("faces two partners alone" in w for w in result["warnings"])
+
+
 def test_roles_are_locked_after_emails_go_out():
     folder = workspace()
     assert run(folder, "roles-sent", "--roster", DRAFTED)["ok"]

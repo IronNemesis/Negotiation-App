@@ -41,7 +41,7 @@ The draft uses her method: the class sorted alphabetically, the first half as Bu
 
 One effect to explain if it comes up: leaving out a student known to be absent shifts the halves, so the pairs after that point in the alphabet change. That is how her method works, not a mistake.
 
-**2. Review (H2).** Show the draft as a compact table (match, Buyer, Seller) and any `warnings` (repeat partners from earlier simulations) or `errors`. She can:
+**2. Review (H2).** Show the draft as a compact table (match, Buyer, Seller) and any `warnings` (repeat partners, or someone facing two partners alone for a second time) or `errors`. If `placement_notes` isn't empty, say in one line why the extra student isn't in the last match. She can:
 - **Approve** it.
 - **Ask for swaps.** Re-run `draft` with `--swap "Last, First;Last, First"` (two names from the class list, separated by `;`). Each keeps the other's role and match.
 - **Cancel.** Log it and stop.
@@ -94,7 +94,7 @@ This writes nothing. It applies her rule:
 
 Results that need her answer:
 - **`absence_unclear`:** a name fits more than one student or no one. Ask with the suggestions.
-- **`needs_placement`:** a stranded student can't join the previous match, because it would have more than three students or repeat a partner. Ask where they should go, then pass `--place "Last, First=MATCH"`.
+- **`needs_placement`:** a stranded student can't join the previous match, because it would have more than three students, repeat a partner, or leave someone facing two partners alone for a second time this term (her rule: nobody is the "1" in a 1v2 more than once). Give her the `reason`, then ask where they should go, then pass `--place "Last, First=MATCH"`.
 - **An error that a tab name "may be" a class-list student:** her draft uses a different first name (for example a legal name). Ask her to confirm, then pass `--same-person "Tab Name=Class Name"`.
 - **Class-list students who aren't in the draft:** usually absent students she already knew about. Confirm, then include them with `--absent`.
 - **`dropped`:** drafted students who are no longer on the class list. They're listed as absent (`UC_0`) automatically, as she asked for students who drop. Tell her in one line, so she can say if it's a misspelled name instead; they won't appear on later simulations' tabs.

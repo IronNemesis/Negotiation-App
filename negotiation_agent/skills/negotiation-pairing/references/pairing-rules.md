@@ -14,7 +14,7 @@
 1. Take the class list, minus students she named as absent.
 2. Sort by last name, then first name, ignoring case, accents, and apostrophes.
 3. The first half (rounded down) are Buyers and the rest are Sellers. Match them in order and number the matches from 1.
-4. With an odd count, the extra Seller joins the last match as a second Seller.
+4. With an odd count, the extra Seller joins the last match as a second Seller, unless that would make the last match's Buyer the "1" in a 1v2 for a second time, or repeat a partner. Then the extra student joins the nearest earlier match where neither happens (reported in `placement_notes`).
 5. Apply her swaps (`--swap`). Each swapped student takes the other's role and match.
 
 **Writing:** names go into the draft table's numbered rows, starting at the first. A second same-role student goes on the next row with no match number. Unused numbered rows are cleared.
@@ -24,7 +24,7 @@
 1. Absent students leave their match and get `<code>_0`. A drafted student who is no longer on the class list dropped the class: they are treated as absent this week, even if she doesn't name them, and simply aren't on the class list for later simulations. Their earlier pair IDs still count as history.
 2. A match that still has at least one student in each role stays as it is.
 3. Otherwise its remaining students are stranded. Each one joins the nearest earlier match still in use, in the same role. If there is no earlier match, they join the next one.
-4. If joining would give that match more than three students, or repeat a partner from an earlier simulation, the script doesn't choose: she places the student with `--place`.
+4. If joining would give that match more than three students, repeat a partner from an earlier simulation, or make someone the "1" in a 1v2 for a second time, the script doesn't choose: she places the student with `--place`.
 5. Match numbers are never renumbered.
 
 **Writing the final table:**
@@ -47,6 +47,7 @@
 
 **Warnings** need her OK:
 - repeat partners from earlier simulations;
+- a student who is the "1" in a 1v2 (alone on their side of a three-person match) and already was on an earlier simulation's final table;
 - in a draft, a class-list student not in any match;
 - in a draft, a name that isn't on the class list (she may have dropped the class; she'll be listed as absent in class).
 

@@ -21,8 +21,9 @@ The rules are:
 4. No student appears who is not on the class list. In a draft, this is a warning instead: a drafted student who has since dropped the class is listed as absent by T9 at the absence step, so she only needs to correct it if the name is misspelled.
 5. In the absence update only, no student's role differs from their role in the draft, because role packets have already been sent.
 6. Two students in the same match who already share a pair ID other than `_0` from an earlier simulation are flagged as a repeat.
+7. A student who would be the "1" in a 1v2 (alone on their side of a three-person match) and already was in an earlier simulation is flagged (Meeting 3). The earlier turns are read from the final tables of earlier simulation tabs.
 
-Rules 1–5 are errors that block approval (except rule 4 on a draft, as above). Rule 6 is a warning the Instructor may accept. For Used Car, the first simulation of the term, rule 6 normally finds nothing, but it runs anyway, so it is already tested when later simulations are added. T3 reports problems but never changes the matches or undoes her edits.
+Rules 1–5 are errors that block approval (except rule 4 on a draft, as above). Rules 6 and 7 are warnings the Instructor may accept. For Used Car, the first simulation of the term, rule 6 normally finds nothing, but it runs anyway, so it is already tested when later simulations are added. T3 reports problems but never changes the matches or undoes her edits.
 
 ## 2. Inputs
 
