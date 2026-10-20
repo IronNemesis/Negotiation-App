@@ -4,6 +4,7 @@ Commands (task IDs refer to negotiation_agent/agent/task-specs):
   prepare  T6 + T7  clean the export and match responses to the current matches; writes nothing
   build    T6-T8    the same, then write the bargaining range workbook next to the export
   missing  T10      students in the current matches with no survey response, with a BCC list; writes a text file
+  names             the class list as "Last, First", one per line, for the survey's name dropdown; writes a text file
 
 Each prints one JSON object. "ok": false comes with an "error" code and a plain-language "message".
 Decisions from the instructor (H4) are passed to every command with --assign, --use, --leave-out,
@@ -58,6 +59,8 @@ class Response:
     prices: dict[str, Answer]
     items: list
     match_how: str = ""
+    chosen: str = ""           # the name picked from the survey's dropdown, as text ("Last, First")
+    chosen_problem: str = ""   # why a dropdown answer couldn't be read
 
 
 def clean_price(text: str, low: float, high: float) -> Answer:
@@ -83,7 +86,33 @@ def clean_price(text: str, low: float, high: float) -> Answer:
     return Answer(number, "", typed)
 
 
-def read_export(path: Path, sim: dict) -> tuple[list[list[str]], list[str], list[Response], list[dict]]:
+def names_file(roster: Path, code: str) -> Path:
+    """The list pasted into the survey's name dropdown. Qualtrics exports dropdown answers as their position in it."""
+    return roster.parent / f"{code} survey names.txt"
+
+
+def read_names_file(path: Path) -> list[str] | None:
+    if not path.exists():
+        return None
+    return [line.strip() for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def find_name_column(codes: list[str], questions: list[str], s: dict, override: str | None) -> int | None:
+    """The dropdown question where students pick their name: from --name-column, the settings, or its wording."""
+    code = override or s.get("name_choice")
+    if code:
+        if code not in codes:
+            raise ns.SkillError("survey_layout", f"The export has no '{code}' column for the name dropdown.",
+                                {"columns": codes})
+        return codes.index(code)
+    known = {s["first_name"], s["last_name"], s["email"]}
+    hits = [i for i, (c, q) in enumerate(zip(codes, questions))
+            if c.startswith("Q") and c not in known and "name" in q.lower()]
+    return hits[0] if len(hits) == 1 else None
+
+
+def read_export(path: Path, sim: dict, roster: Path, code: str,
+                name_column: str | None = None) -> tuple[list[list[str]], list[str], list[Response], list[dict], str | None]:
     if not path.exists():
         raise ns.SkillError("file_missing", f"Could not find the survey export {path.name} in {path.parent}.")
     try:
@@ -105,7 +134,19 @@ def read_export(path: Path, sim: dict) -> tuple[list[list[str]], list[str], list
         return codes.index(code)
 
     s = sim["survey"]
-    c_first, c_last, c_role, c_email = col(s["first_name"]), col(s["last_name"]), col(s["role"]), col(s["email"])
+    c_choice = find_name_column(codes, questions, s, name_column)
+    # With a name dropdown, she may drop the typed-name questions from the survey.
+    optional = (lambda code: codes.index(code) if code in codes else None) if c_choice is not None else col
+    c_first, c_last, c_email = optional(s["first_name"]), optional(s["last_name"]), optional(s["email"])
+    c_role = col(s["role"])
+    choices = read_names_file(names_file(roster, code)) if c_choice is not None else None
+    if c_choice is not None and choices is None and any(
+            ns.clean(r[c_choice]).isdigit() for r in rows[1 + skip:] if len(r) > c_choice):
+        raise ns.SkillError("names_list_missing",
+                            f"The export gives the names picked from the dropdown as numbers, and the list that "
+                            f"turns them back into names ('{names_file(roster, code).name}') isn't next to the roster "
+                            "workbook. Put that file back, or download the export again with 'Use choice text' for "
+                            "the name question only.")
     c_prices = {name: col(code) for name, code in s["prices"].items()}
     c_items = [col(code) for code in s["items"]]
     c_status = codes.index("Status") if "Status" in codes else None
@@ -118,7 +159,8 @@ def read_export(path: Path, sim: dict) -> tuple[list[list[str]], list[str], list
     for n, row in enumerate(rows[1 + skip:], start=1):
         row = row + [""] * (len(codes) - len(row))
         rid = row[c_rid] if c_rid is not None and row[c_rid] else f"row {n}"
-        answer_cols = [c_first, c_last, c_role, c_email, *c_prices.values(), *c_items]
+        answer_cols = [c for c in (c_first, c_last, c_role, c_email, c_choice, *c_prices.values(), *c_items)
+                       if c is not None]
         if not any(ns.clean(row[c]) for c in answer_cols):
             removed.append({"response": rid, "reason": "every answer is blank"})
             continue
@@ -127,11 +169,28 @@ def read_export(path: Path, sim: dict) -> tuple[list[list[str]], list[str], list
             removed.append({"response": rid, "reason": f"not a real response (status {status}, e.g. a survey preview)"})
             continue
         items = [int(v) if ns.clean(v).isdigit() else (ns.clean(v) or None) for v in (row[c] for c in c_items)]
+        get = lambda c: ns.clean(row[c]) if c is not None else ""  # noqa: E731
+        chosen, problem = read_choice(get(c_choice), choices, code)
+        first, last = get(c_first), get(c_last)
+        if chosen and not (first or last):
+            first, last = ns.split_class_name(chosen)
         responses.append(Response(
-            rid=rid, time=row[c_time] if c_time is not None else "", first=ns.clean(row[c_first]),
-            last=ns.clean(row[c_last]), email=ns.clean(row[c_email]).lower(), role_code=ns.clean(row[c_role]),
-            prices={name: clean_price(row[c], low, high) for name, c in c_prices.items()}, items=items))
-    return rows, item_headers, responses, removed
+            rid=rid, time=row[c_time] if c_time is not None else "", first=first, last=last,
+            email=get(c_email).lower(), role_code=get(c_role),
+            prices={name: clean_price(row[c], low, high) for name, c in c_prices.items()}, items=items,
+            chosen=chosen, chosen_problem=problem))
+    return rows, item_headers, responses, removed, (codes[c_choice] if c_choice is not None else None)
+
+
+def read_choice(value: str, choices: list[str] | None, code: str) -> tuple[str, str]:
+    """A dropdown answer as a name. Exported as text, or as its position in the list she pasted into Qualtrics."""
+    if not value:
+        return "", ""
+    if not value.isdigit():
+        return value, ""
+    if not 1 <= int(value) <= len(choices):
+        return "", f"choice {value} is not on the {len(choices)}-name list in '{code} survey names.txt'"
+    return choices[int(value) - 1], ""
 
 
 # ---------------------------------------------------------------- current matches
@@ -210,14 +269,32 @@ def match_responses(responses, groups, absent, students, args):
             claims[assigned[r.rid]].append(r)
             decisions.append(f"Response {r.rid} ({r.first} {r.last}) assigned to {assigned[r.rid]}")
             continue
-        res = ns.resolve_student(r.first, r.last, pool, r.email)
+        if r.chosen_problem:
+            unresolved.append(unresolved_entry(r, r.chosen_problem, []))
+            continue
+        if r.chosen:
+            # The dropdown lists class-list names; her tab may spell a student differently, so go through the
+            # class list and find the participant by name or class-list email.
+            on_class = ns.resolve_class_name(r.chosen, students)
+            if on_class.how != "exact":
+                unresolved.append(unresolved_entry(r, f"the name picked from the list, '{r.chosen}', isn't on the "
+                                                      "class list", on_class.candidates))
+                continue
+            st = on_class.student
+            hits = [x for x in pool if x.key == st.key or (st.email and x.email == st.email)]
+            if len(hits) != 1:
+                left_off.append(f"{st.name} (on the class list but not in the current matches; response {r.rid})")
+                continue
+            res = ns.Resolution(hits[0], "exact")
+        else:
+            res = ns.resolve_student(r.first, r.last, pool, r.email)
         by_email = [s for s in pool if s.email and s.email == r.email]
         if res.confident and by_email and by_email[0].name != res.student.name:
             unresolved.append(unresolved_entry(r, "the name and the email point to different students",
                                                [res.student, by_email[0]]))
             continue
         if res.confident:
-            r.match_how = res.how
+            r.match_how = "dropdown" if r.chosen else res.how
             claims[res.student.name].append(r)
             continue
         res_class = ns.resolve_student(r.first, r.last, students, r.email)
@@ -479,6 +556,30 @@ def missing_list(roster: Path, code: str, groups, unresolved) -> dict:
             "unmatched_responses": unmatched, "saved_to": saved}
 
 
+def cmd_names(args):
+    """The class list for the survey's name dropdown, saved as the codebook for reading the export later."""
+    roster = Path(args.roster).expanduser().resolve()
+    _, students, warnings = ns.read_class_list(ns.open_workbook(roster))
+    names = [st.name for st in sorted(students, key=lambda st: st.key)]
+    path = names_file(roster, args.simulation)
+    previous = read_names_file(path)
+    if previous is not None and previous != names and not args.replace:
+        raise ns.SkillError("names_list_exists",
+                            f"'{path.name}' already exists with a different list. If the survey already uses it, keep "
+                            "it: the export is read with that list. Replace it only for a new or re-pasted survey.",
+                            {"added": [n for n in names if n not in previous],
+                             "removed": [n for n in previous if n not in names]})
+    backup = ns.backup(path, "replaced") if previous is not None and previous != names else None
+    try:
+        path.write_text("\n".join(names) + "\n", encoding="utf-8")
+    except PermissionError:
+        raise ns.SkillError("file_locked", f"{path.name} is open. Close it and try again.")
+    ns.write_log(roster.parent, "Survey name list", f"{path.name}: {len(names)} names"
+                                                    f"{'; previous list backed up' if backup else ''}.")
+    ns.emit({"ok": True, "names": names, "count": len(names), "saved_to": str(path),
+             "previous_list_backup": str(backup) if backup else None, "class_list_warnings": warnings})
+
+
 def run(args, mode: str):
     build = mode == "build"
     started = time.time()
@@ -489,11 +590,12 @@ def run(args, mode: str):
     SETTINGS_SIM.clear()
     SETTINGS_SIM.update(sim)
     roster, export = Path(args.roster).expanduser().resolve(), Path(args.csv).expanduser().resolve()
-    raw_rows, item_headers, responses, removed = read_export(export, sim)
+    raw_rows, item_headers, responses, removed, name_col = read_export(export, sim, roster, args.simulation,
+                                                                       args.name_column)
     students, stage, groups, absent, warnings = load_matches(roster, args.simulation, sim)
     decisions, unresolved, left_off = match_responses(responses, groups, absent, students, args)
-    result = {"ok": True, **summarize(stage, groups, absent, removed, responses, decisions, unresolved, left_off,
-                                      warnings)}
+    result = {"ok": True, "name_dropdown_column": name_col,
+              **summarize(stage, groups, absent, removed, responses, decisions, unresolved, left_off, warnings)}
     if mode == "missing":
         listed = missing_list(roster, args.simulation, groups, unresolved)
         ns.write_log(roster.parent, "T10 Survey non-respondents",
@@ -556,11 +658,16 @@ def run(args, mode: str):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
+    sp = sub.add_parser("names")
+    sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
+    sp.add_argument("--simulation", default="UC", help="Simulation code (default UC)")
+    sp.add_argument("--replace", action="store_true", help="Replace an existing, different name list")
     for name in ("prepare", "build", "missing"):
         sp = sub.add_parser(name)
         sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
         sp.add_argument("--csv", required=True, help="The Qualtrics export (.csv)")
         sp.add_argument("--simulation", default="UC", help="Simulation code (default UC)")
+        sp.add_argument("--name-column", help="Question code of the name dropdown, if it isn't found on its own")
         sp.add_argument("--assign", action="append", default=[], help="RESPONSE_ID=Last, First (her decision)")
         sp.add_argument("--use", action="append", default=[], help="Response ID to use for a duplicate")
         sp.add_argument("--leave-out", action="append", default=[], help="Response ID to leave off the sheet")
@@ -571,7 +678,10 @@ def main():
             sp.add_argument("--replace-in-class-entries", action="store_true",
                             help="Replace an existing sheet even though ACTUAL IO or OUTCOME has entries")
     args = p.parse_args()
-    run(args, args.command)
+    if args.command == "names":
+        cmd_names(args)
+    else:
+        run(args, args.command)
 
 
 if __name__ == "__main__":

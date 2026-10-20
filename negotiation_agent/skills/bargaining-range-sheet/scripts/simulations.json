@@ -8,6 +8,7 @@
       "last_name": "Q2",
       "role": "Q3",
       "email": "Q11",
+      "name_choice": null,
       "prices": {"INITIAL": "Q4", "TARGET": "Q5", "RESERVATION": "Q6", "BATNA": "Q7"},
       "items": ["Q12_1", "Q12_2", "Q12_3", "Q12_4", "Q12_5", "Q12_6"]
     },

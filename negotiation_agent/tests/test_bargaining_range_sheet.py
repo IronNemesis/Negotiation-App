@@ -221,6 +221,91 @@ def test_missing_lists_who_hasnt_answered():
     assert final["matches_from"] == "final table" and "Adebayo, Tolu" not in final["missing"]
 
 
+def test_names_list_for_the_survey_dropdown():
+    folder = workspace()
+    result = run(folder, "names", "--roster", DRAFTED)
+    assert result["ok"] and result["count"] == 39
+    assert result["names"][0] == "Adebayo, Tolu" and result["names"][-1] == "Zimmerman, Tess"
+    saved = Path(result["saved_to"])
+    assert saved.name == "UC survey names.txt" and saved.read_text(encoding="utf-8").splitlines() == result["names"]
+    assert run(folder, "names", "--roster", DRAFTED)["ok"]  # same list again: nothing to protect
+    # The class list changed after the survey went out: the existing list is kept unless she says otherwise.
+    wb = load_workbook(folder / DRAFTED)
+    ws = wb["Att - Fall"]
+    ws.delete_rows(next(c.row for c in ws["B"] if c.value == "Bennett, Owen"))
+    wb.save(folder / DRAFTED)
+    refused = run(folder, "names", "--roster", DRAFTED)
+    assert not refused["ok"] and refused["error"] == "names_list_exists" and refused["removed"] == ["Bennett, Owen"]
+    replaced = run(folder, "names", "--roster", DRAFTED, "--replace")
+    assert replaced["ok"] and replaced["count"] == 38 and Path(replaced["previous_list_backup"]).exists()
+
+
+def dropdown_export(folder: Path, numeric: bool = True, keep_typed_names: bool = False) -> str:
+    """The example export as if the survey had a name dropdown (Q13) instead of typed names."""
+    sys.path.insert(0, str(SCRIPT.parent))
+    import nps_shared as ns
+    names = run(folder, "names", "--roster", DRAFTED)["names"]
+    students = ns.read_class_list(load_workbook(folder / DRAFTED))[1]
+    misspelled = {"R_example0007": "Evans, Jordan", "R_example0026": "Park, Danielle"}  # what they meant to pick
+    import csv
+    with (folder / CSV).open(newline="", encoding="utf-8-sig") as f:
+        rows = list(csv.reader(f))
+    codes = rows[0]
+    q1, q2, rid = codes.index("Q1"), codes.index("Q2"), codes.index("ResponseId")
+    out = []
+    for n, row in enumerate(rows):
+        if n == 0:
+            extra = "Q13"
+        elif n == 1:
+            extra = "Select your name from the list"
+        elif n == 2:
+            extra = '{"ImportId":"QID13"}'
+        elif row[rid] in misspelled:
+            extra = misspelled[row[rid]]
+        else:
+            res = ns.resolve_student(row[q1], row[q2], students)
+            extra = res.student.name if res.confident else ""
+        if n > 2 and extra and numeric:
+            extra = str(names.index(extra) + 1)
+        row = row + [extra]
+        if not keep_typed_names:
+            row = [v for i, v in enumerate(row) if i not in (q1, q2)]
+        out.append(row)
+    name = "dropdown export.csv"
+    with (folder / name).open("w", newline="", encoding="utf-8") as f:
+        csv.writer(f).writerows(out)
+    return name
+
+
+def test_dropdown_answers_match_students_exactly():
+    folder = workspace()
+    export = dropdown_export(folder)
+    result = run(folder, "prepare", "--roster", DRAFTED, "--csv", export)
+    assert result["ok"] and result["name_dropdown_column"] == "Q13", result
+    # The misspelled names that needed her decision are now matched; only the double submission is left.
+    assert [u.get("student") for u in result["unresolved"]] == ["Hale, Simone"]
+    assert set(result["matched"]) == {"dropdown"}
+    assert result["no_response"] == ["Adebayo, Tolu", "Bennett, Owen", "Underwood, Mia"]
+    built = run(folder, "build", "--roster", DRAFTED, "--csv", export, "--week", "2", "--latest-duplicates")
+    assert built["ok"], built
+    ws, header, rows = sheet_rows(folder / SHEET)
+    people = people_on_sheet(ws, header, rows)
+    assert len(people) == 39 and people["Evans, Jordan"][1] == "BUYER"
+    # Exported as choice text instead of numbers works the same, with no name list needed.
+    folder = workspace()
+    text = dropdown_export(folder, numeric=False)
+    (folder / "UC survey names.txt").unlink()
+    assert run(folder, "prepare", "--roster", DRAFTED, "--csv", text)["matched"] == result["matched"]
+
+
+def test_dropdown_codes_without_the_name_list_stop():
+    folder = workspace()
+    export = dropdown_export(folder, keep_typed_names=True)
+    (folder / "UC survey names.txt").unlink()
+    result = run(folder, "prepare", "--roster", DRAFTED, "--csv", export)
+    assert not result["ok"] and result["error"] == "names_list_missing" and "survey names.txt" in result["message"]
+
+
 def test_existing_in_class_entries_are_protected():
     folder = workspace()
     assert build(folder, DRAFTED)["ok"]

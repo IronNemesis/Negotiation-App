@@ -31,6 +31,7 @@ The workflow is built from three meetings and three of the instructor's files: h
 |---|---|
 | Open a copy of her workbook that has been saved by openpyxl in desktop Excel (ideally Windows) and confirm it opens without a repair prompt. `shared/tools/roundtrip_check.py` confirmed nothing in the content is lost; only Excel itself can confirm the file opens cleanly. | To do before the skills write to her real workbook |
 | Write a step-by-step guide for her on using Claude and this workflow (requested in Meeting 3). | Planned; see the build plan |
+| Confirm on a real Qualtrics export with a name dropdown that answers come out as positions in the pasted list (1, 2, …), and note the dropdown's question code for `name_choice` in `simulations.json`. Tested so far only on a fictional export. | To do when she adds the dropdown |
 
 ## Decided
 

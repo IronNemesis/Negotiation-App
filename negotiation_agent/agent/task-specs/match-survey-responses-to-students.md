@@ -15,7 +15,9 @@ The current matches come from the simulation tab:
 - **before class,** the draft table;
 - **after the absence update,** the final table.
 
-A response is matched to a student when exactly one student fits the first rule that applies:
+**Name dropdown (Meeting 3).** If the survey asks students to pick their name from a dropdown list, that answer is used first. The dropdown lists class-list names (`Last, First`), so a picked name links to exactly one student; T7 then finds that student in the current matches by name or class-list email, which covers a student whose name on her tab differs from the class list. A picked name that isn't in the current matches is left off and listed, as below. If the picked name and the class-list email given in the survey point to different students, she is asked (H4). If a student left the dropdown blank, the rules below are used.
+
+Otherwise, a response is matched to a student when exactly one student fits the first rule that applies:
 1. **Email:** the response email equals the student's Cal Poly email on the class list (ignoring case).
 2. **Full name:** first and last name equal the class-list name, ignoring case, spaces, and accents.
 3. **Nickname:** the last name matches exactly, the first name is a known nickname or shortened form of the class-list first name (Andrew/Andy, Katherine/Katie), and no other student shares that last name.

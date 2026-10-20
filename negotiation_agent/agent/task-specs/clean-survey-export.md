@@ -37,17 +37,22 @@ Other columns:
 ### Input 2
 
 - **Input name:** Survey settings
-- **Contents and format:** For the simulation: which column holds each field (`Q1` first name … `Q11` email), the price columns, the usual price range, and the role codes.
+- **Contents and format:** For the simulation: which column holds each field (`Q1` first name … `Q11` email), the price columns, the usual price range, and the role codes. Optionally, the code of the name dropdown question (`name_choice`); if it isn't set, T6 looks for a single other question whose wording mentions "name".
+
+### Input 3
+
+- **Input name:** Survey name list (only with a name dropdown)
+- **Contents and format:** `<code> survey names.txt` next to the roster workbook: the class list as `Last, First`, one per line, exactly as pasted into the dropdown's choices. Qualtrics exports a dropdown answer as its position in that list (`1`, `2`, …), so T6 reads the answer back as the name on that line. An export downloaded with "Use choice text" holds the names themselves and doesn't need the list.
 - **Source:** The skill's settings file.
 
-- **If a required input is missing or invalid:** If the file is not a Qualtrics CSV, or a column named in the settings is missing (for example, the survey was edited and `Q6` no longer exists), T6 stops with status "Survey layout changed" and the case goes to H1. Nothing is built from a misread export.
+- **If a required input is missing or invalid:** If the file is not a Qualtrics CSV, or a column named in the settings is missing (for example, the survey was edited and `Q6` no longer exists), T6 stops with status "Survey layout changed" and the case goes to H1. With a name dropdown, the typed first and last name and the email become optional. If the dropdown answers are numbers and the name list is missing, T6 stops rather than guess. Nothing is built from a misread export.
 
 ## 3. Outputs
 
 ### Output 1
 
 - **Output name:** Cleaned responses
-- **Contents and format:** One record per kept response: response ID, submission time, first and last name as typed, email, role code, the four prices (as cleaned numbers or original text), the six items, and for each price a flag (clean, corrected, unclear, or out of range) with the original answer.
+- **Contents and format:** One record per kept response: response ID, submission time, first and last name as typed, the name picked from the dropdown (if any), email, role code, the four prices (as cleaned numbers or original text), the six items, and for each price a flag (clean, corrected, unclear, or out of range) with the original answer.
 - **Next task or recipient:** T7: Match Survey Responses to Students.
 - **Complete when:** Every row in the export is either kept and cleaned or removed with a reason, and every corrected or unclear value carries its original answer.
 
