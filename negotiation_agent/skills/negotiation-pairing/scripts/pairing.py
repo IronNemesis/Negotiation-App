@@ -66,6 +66,7 @@ class Context:
         self.tab = ns.read_sim_tab(self.wb, self.code, self.roles)
         self.history, self.unlinked_history = ns.read_pair_history(self.wb, exclude_code=self.code).linked_to_class(
             self.students)
+        self.solo = solo_history(self.wb, self.code, self.students)
         self.same_person = {}
         for spec in getattr(args, "same_person", []) or []:
             tab_name, _, class_name = spec.partition("=")
@@ -95,6 +96,38 @@ class Context:
 
     def log(self, step: str, details: str) -> str | None:
         return ns.write_log(self.roster.parent, f"{step} ({self.code})", details)
+
+
+def solo_history(wb, current: str, students: list[ns.Student]) -> dict[str, list[str]]:
+    """Who has already been "the 1" in a 1v2: alone on their side of a three-person match, on an earlier tab."""
+    out: dict[str, list[str]] = {}
+    for code, sim in SETTINGS.items():
+        if code == current or code not in wb.sheetnames:
+            continue
+        try:
+            tab = ns.read_sim_tab(wb, code, sim["roles"])
+        except ns.SkillError:
+            continue
+        if not tab.final_members:
+            continue
+        for match, members in tab.groups(tab.final_members).items():
+            alone = solo_of(members, sim["roles"])
+            if alone:
+                res = ns.resolve_class_name(alone.name, students, alone.email)
+                if res.confident:
+                    out.setdefault(res.student.key, []).append(f"{code}_{match}")
+    return out
+
+
+def solo_of(people: list, roles: list[str]):
+    """The student alone on their side of a three-person match (the "1" in a 1v2), or None."""
+    if len(people) != 3:
+        return None
+    for role in roles:
+        alone = [p for p in people if p.role == role]
+        if len(alone) == 1:
+            return alone[0]
+    return None
 
 
 def table_preview(groups: dict[int, list[Person]], roles: list[str]) -> list[dict]:
@@ -135,6 +168,10 @@ def check_groups(ctx: Context, groups: dict[int, list[Person]], absent: list[Per
             if draft_roles is not None and p.key in draft_roles and draft_roles[p.key] != p.role:
                 errors.append(f"{p.name} was a {draft_roles[p.key].title()} in the draft and can't become a "
                               f"{p.role.title()}: role packets have already gone out.")
+        alone = solo_of(people, ctx.roles)
+        if alone and ctx.solo.get(alone.key):
+            warnings.append(f"{alone.name} faces two partners alone in match {match} and already did in "
+                            f"{', '.join(ctx.solo[alone.key])}.")
         for a, b in combinations(people, 2):
             shared = ctx.history.shared_ids(a.key, b.key)
             if shared:
@@ -200,12 +237,7 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
     if len(ordered) < 2:
         raise ns.SkillError("too_few_students", "Fewer than two students are left to match.")
     half = len(ordered) // 2
-    first_role, second_role = ctx.roles
-    groups = {i + 1: [Person(a.name, "", first_role, a, "exact"), Person(b.name, "", second_role, b, "exact")]
-              for i, (a, b) in enumerate(zip(ordered[:half], ordered[half:]))}
-    if len(ordered) % 2:
-        extra = ordered[-1]
-        groups[half].append(Person(extra.name, "", second_role, extra, "exact"))
+    groups, notes = pair_sides(ctx, ordered[:half], ordered[half:])
     for spec in args.swap:
         names = [n.strip() for n in spec.split(";")]
         if len(names) != 2:
@@ -217,7 +249,36 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
         ia, ib = groups[ma].index(person_a), groups[mb].index(person_b)
         groups[ma][ia] = Person(b.name, "", person_a.role, b, "exact")
         groups[mb][ib] = Person(a.name, "", person_b.role, a, "exact")
-    return groups, [Person(p.name, "", "", p.student, "exact") for p in absent]
+    return groups, [Person(p.name, "", "", p.student, "exact") for p in absent], notes
+
+
+def pair_sides(ctx: Context, left: list[ns.Student], right: list[ns.Student]) -> tuple[dict[int, list[Person]], list[str]]:
+    """Match the two sides in order. An extra student joins the last match, unless that would make someone "the 1"
+    in a 1v2 for a second time or repeat a partner; then the nearest earlier match where neither happens."""
+    first_role, second_role = ctx.roles
+    n = min(len(left), len(right))
+    groups = {i + 1: [Person(a.name, "", first_role, a, "exact"), Person(b.name, "", second_role, b, "exact")]
+              for i, (a, b) in enumerate(zip(left[:n], right[:n]))}
+    notes = []
+    extras = [(s, first_role) for s in left[n:]] + [(s, second_role) for s in right[n:]]
+    for student, role in extras:
+        extra = Person(student.name, "", role, student, "exact")
+        target = next((m for m in sorted(groups, reverse=True) if fits(ctx, groups[m], extra)), max(groups))
+        if target != max(groups):
+            alone = solo_of(groups[max(groups)] + [extra], ctx.roles)
+            notes.append(f"{extra.name} joins match {target} as a second {role.title()} instead of match "
+                         f"{max(groups)}, so that {alone.name if alone else 'nobody'} isn't the one facing two "
+                         "partners again and no partners repeat.")
+        groups[target].append(extra)
+    return groups, notes
+
+
+def fits(ctx: Context, people: list[Person], newcomer: Person) -> bool:
+    """Whether a student can join a match without a repeat partner or a second turn as "the 1" in a 1v2."""
+    if len(people) + 1 > MAX_GROUP or any(ctx.history.shared_ids(newcomer.key, q.key) for q in people):
+        return False
+    alone = solo_of(people + [newcomer], ctx.roles)
+    return not (alone and ctx.solo.get(alone.key))
 
 
 def draft_rows(groups: dict[int, list[Person]], roles: list[str]) -> list[tuple[int | None, dict[str, Person | None]]]:
@@ -290,10 +351,11 @@ def cmd_snapshot(args):
 
 def cmd_draft(args, write: bool = False):
     ctx = Context(args)
-    groups, absent = compute_draft(ctx, args)
+    groups, absent, notes = compute_draft(ctx, args)
     checks = check_groups(ctx, groups, absent, "draft")
     result = {"ok": True, "simulation": ctx.code, "matches": len(groups), "students": sum(map(len, groups.values())),
               "known_absent": [p.name for p in absent], "draft": table_preview(groups, ctx.roles),
+              "placement_notes": notes,
               "swaps_applied": args.swap, **checks}
     if not write:
         ctx.log("T2 Draft preview", f"{len(groups)} matches; absent: {[p.name for p in absent] or 'none'}; "
@@ -459,10 +521,15 @@ def propose_final(ctx: Context, args):
                     raise ns.SkillError("no_match_left", "No complete match is left to join.")
                 too_big = len(final[target]) + 1 > MAX_GROUP
                 repeat = any(ctx.history.shared_ids(p.key, q.key) for q in final[target])
-                if too_big or repeat:
+                alone = solo_of(final[target] + [p], ctx.roles)
+                solo_again = bool(alone and ctx.solo.get(alone.key))
+                if too_big or repeat or solo_again:
+                    reason = ("that match would have more than three students" if too_big
+                              else "that match would repeat a partner from an earlier simulation" if repeat
+                              else f"{alone.name} would face two partners alone again (already in "
+                                   f"{', '.join(ctx.solo[alone.key])})")
                     needs_placement.append({"student": p.name, "from_match": m, "suggested_match": target,
-                                            "reason": "that match would have more than three students" if too_big
-                                            else "that match would repeat a partner from an earlier simulation"})
+                                            "reason": reason})
                     continue
             final[target].append(p)
             moves.append(f"{p.name} joins match {target} as a second {p.role.title()} because {lost} "

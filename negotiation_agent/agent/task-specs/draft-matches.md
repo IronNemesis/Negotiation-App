@@ -14,7 +14,7 @@ T2 drafts the matches using the Instructor's own method, so the result looks lik
 1. Sort the class list alphabetically by last name, then first name, leaving out any student she has already said will be absent.
 2. Split it in half. The first half are Buyers and the second half are Sellers. With an odd count, the second half has one extra student.
 3. Match in order: the first Buyer with the first Seller, and so on, numbering matches from 1.
-4. With an odd count, the extra Seller joins the last match as a second Seller, on a row with no match number.
+4. With an odd count, the extra Seller joins the last match as a second Seller, on a row with no match number. If that would make the last match's Buyer the "1" in a 1v2 (alone on their side of a three-person match) for a second time in the term, or repeat a partner from an earlier simulation, the extra Seller joins the nearest earlier match where neither happens, and T2 says so (Meeting 3: nobody is the "1" more than once).
 
 Students she named as absent in advance are left out of the draft and kept for T9, which records them as `_0`.
 
