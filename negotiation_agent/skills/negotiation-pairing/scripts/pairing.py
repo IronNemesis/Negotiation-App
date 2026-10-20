@@ -31,6 +31,7 @@ from openpyxl import load_workbook  # noqa: E402
 
 SETTINGS = json.loads((HERE / "simulations.json").read_text(encoding="utf-8"))
 MAX_GROUP = 3
+DRAFT_METHODS = ("alphabetical-halves", "rotate-second-half")
 
 
 # ---------------------------------------------------------------- loading
@@ -224,7 +225,8 @@ def resolve_entries(entries: list[str], people: list[Person]) -> tuple[list[Pers
 
 
 def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Person]]:
-    if ctx.sim.get("draft_method") != "alphabetical-halves":
+    method = ctx.sim.get("draft_method")
+    if method not in DRAFT_METHODS:
         raise ns.SkillError("draft_method_unknown", f"Drafting {ctx.sim['name']} isn't supported yet; only "
                                                     "simulations with a confirmed drafting method can be drafted.")
     everyone = [Person(s.name, "", "", s, "exact") for s in ctx.students]
@@ -236,8 +238,16 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
     ordered = sorted((s for s in ctx.students if s.key not in absent_keys), key=lambda s: s.key)
     if len(ordered) < 2:
         raise ns.SkillError("too_few_students", "Fewer than two students are left to match.")
-    half = len(ordered) // 2
-    groups, notes = pair_sides(ctx, ordered[:half], ordered[half:])
+    if method == "alphabetical-halves":
+        half = len(ordered) // 2
+        left, right, side_notes = ordered[:half], ordered[half:], []
+    else:
+        # Her later-simulation method: everyone keeps their side from the earlier simulation; the right column
+        # moves down one and the bottom student goes to the top.
+        left, right, side_notes = sides_from_previous(ctx, ordered)
+        right = right[-1:] + right[:-1]
+    groups, notes = pair_sides(ctx, left, right)
+    notes = side_notes + notes
     for spec in args.swap:
         names = [n.strip() for n in spec.split(";")]
         if len(names) != 2:
@@ -250,6 +260,34 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
         groups[ma][ia] = Person(b.name, "", person_a.role, b, "exact")
         groups[mb][ib] = Person(a.name, "", person_b.role, a, "exact")
     return groups, [Person(p.name, "", "", p.student, "exact") for p in absent], notes
+
+
+def sides_from_previous(ctx: Context, ordered: list[ns.Student]) -> tuple[list, list, list[str]]:
+    """Each student's side (first or second role) in the earlier simulation's draft, alphabetical within a side.
+    Students who weren't in that draft go to the smaller side; if drops leave the sides more than one apart, the
+    alphabetically last students of the bigger side move over."""
+    code = ctx.sim.get("rotate_from")
+    if code not in SETTINGS:
+        raise ns.SkillError("draft_method_unknown", f"{ctx.sim['name']} has no earlier simulation set to rotate from.")
+    prev = SETTINGS[code]
+    tab = ns.read_sim_tab(ctx.wb, code, prev["roles"])
+    if not tab.draft_members:
+        raise ns.SkillError("previous_draft_missing", f"The {code} tab has no draft table, so each student's side "
+                                                      f"from {prev['name']} isn't known.")
+    side = {ctx.person_from_tab(m).key: prev["roles"].index(m.role) for m in tab.draft_members}
+    sides = ([s for s in ordered if side.get(s.key) == 0], [s for s in ordered if side.get(s.key) == 1])
+    notes = []
+    for s in (s for s in ordered if s.key not in side):
+        i = 0 if len(sides[0]) <= len(sides[1]) else 1
+        sides[i].append(s)
+        notes.append(f"{s.name} wasn't in the {code} draft and goes on the {ctx.roles[i].title()} side.")
+    while abs(len(sides[0]) - len(sides[1])) > 1:
+        big = 0 if len(sides[0]) > len(sides[1]) else 1
+        moved = sides[big].pop()
+        sides[1 - big].append(moved)
+        notes.append(f"{moved.name} moves to the {ctx.roles[1 - big].title()} side to keep the sides even.")
+    left, right = (sorted(x, key=lambda s: s.key) for x in sides)
+    return left, right, notes
 
 
 def pair_sides(ctx: Context, left: list[ns.Student], right: list[ns.Student]) -> tuple[dict[int, list[Person]], list[str]]:
@@ -265,10 +303,14 @@ def pair_sides(ctx: Context, left: list[ns.Student], right: list[ns.Student]) ->
         extra = Person(student.name, "", role, student, "exact")
         target = next((m for m in sorted(groups, reverse=True) if fits(ctx, groups[m], extra)), max(groups))
         if target != max(groups):
-            alone = solo_of(groups[max(groups)] + [extra], ctx.roles)
+            last = groups[max(groups)]
+            alone = solo_of(last + [extra], ctx.roles)
+            met = [q.name for q in last if ctx.history.shared_ids(extra.key, q.key)]
+            reasons = ([f"match {max(groups)} already has three students"] if len(last) >= MAX_GROUP else []) + \
+                      ([f"{alone.name} would face two partners alone again"] if alone and ctx.solo.get(alone.key)
+                       else []) + ([f"{extra.name} was already partners with {', '.join(met)}"] if met else [])
             notes.append(f"{extra.name} joins match {target} as a second {role.title()} instead of match "
-                         f"{max(groups)}, so that {alone.name if alone else 'nobody'} isn't the one facing two "
-                         "partners again and no partners repeat.")
+                         f"{max(groups)}, because {' and '.join(reasons)}.")
         groups[target].append(extra)
     return groups, notes
 
@@ -345,7 +387,7 @@ def cmd_snapshot(args):
         "roles_locked": roles_locked(ctx),
         "earlier_simulations_found": sorted({i.split("_")[0] for ids in ctx.history.ids_by_student.values() for i in ids}),
         "history_names_not_linked": ctx.unlinked_history,
-        "can_draft": ctx.sim.get("draft_method") == "alphabetical-halves",
+        "can_draft": ctx.sim.get("draft_method") in DRAFT_METHODS,
     })
 
 

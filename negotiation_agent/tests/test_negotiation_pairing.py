@@ -254,6 +254,46 @@ def test_draft_moves_the_extra_student_so_nobody_is_the_one_twice():
     assert not any("faces two partners alone" in w for w in result["warnings"])
 
 
+def test_salary_draft_rotates_the_right_column():
+    folder = workspace()
+    result = run(folder, "draft", "--roster", AFTER, "--simulation", "SL")
+    assert result["ok"] and not result["errors"] and result["matches"] == 19, result
+    draft = {m["match"]: (m["SUPERVISOR"], m["SUBORDINATE"]) for m in result["draft"]}
+    uc = {m["match"]: m for m in EXPECTED["draft"]}
+    buyers = [n for m in EXPECTED["draft"] for n in m["BUYER"]]
+    sellers = [n for m in EXPECTED["draft"] for n in m["SELLER"]]
+    # Used Car Buyers stay on the left in order; the right column moves down one and the bottom goes to the top.
+    assert [draft[m][0] for m in sorted(draft)] == [[b] for b in buyers]
+    assert draft[1][1] == [sellers[-1]] and draft[2][1] == [sellers[0]] and draft[3][1] == [sellers[1]]
+    assert len(uc) == 19 and sellers[-1] == "Zimmerman, Tess"
+    # The extra Subordinate would meet her Used Car partner in the last match, so she joins match 18 instead.
+    assert draft[19][1] == ["Walsh, Connor"] and draft[18][1] == ["Van der Berg, Elise", "Yilmaz, Deniz"]
+    assert any("already partners with Mahoney, Grace" in n for n in result["placement_notes"])
+    # Rafael Mendes joined Maya Alvarez's match in class, so the rotation repeats that pair: shown, not fixed.
+    assert result["warnings"] == ["Repeat partners in match 2: Alvarez, Maya and Mendes, Rafael were already "
+                                  "together (UC_2)."]
+    written = run(folder, "write-draft", "--roster", AFTER, "--simulation", "SL", "--accept-warnings")
+    assert written["ok"], written
+    tab = ns.read_sim_tab(load_workbook(folder / AFTER), "SL", ["SUPERVISOR", "SUBORDINATE"])
+    assert len(tab.groups(tab.draft_members)) == 19
+
+
+def test_salary_draft_keeps_the_sides_even_after_a_drop():
+    folder = workspace()
+    wb = load_workbook(folder / AFTER)
+    ws = wb["Att - Fall"]
+    for name in ("Adebayo, Tolu", "Alvarez, Maya"):  # two Used Car Buyers drop: 17 left, 20 right
+        ws.delete_rows(next(c.row for c in ws["B"] if c.value == name))
+    wb.save(folder / AFTER)
+    result = run(folder, "draft", "--roster", AFTER, "--simulation", "SL")
+    assert result["ok"] and result["students"] == 37
+    left = [n for m in result["draft"] for n in m["SUPERVISOR"]]
+    assert len(left) == 18 and "Zimmerman, Tess" in left
+    assert any("Zimmerman, Tess moves to the Supervisor side" in n for n in result["placement_notes"])
+    before = run(folder, "draft", "--roster", BEFORE, "--simulation", "SL")
+    assert not before["ok"] and before["error"] == "previous_draft_missing"
+
+
 def test_roles_are_locked_after_emails_go_out():
     folder = workspace()
     assert run(folder, "roles-sent", "--roster", DRAFTED)["ok"]
@@ -275,8 +315,6 @@ def test_repeat_partners_are_warned_for_the_next_simulation():
     assert result["ok"]
     repeats = [w for w in result["warnings"] if w.startswith("Repeat partners")]
     assert len(repeats) == 1 and "UC_2" in repeats[0] and "Alvarez, Maya" in repeats[0]
-    refused = run(folder, "draft", "--roster", AFTER, "--simulation", "SL")
-    assert not refused["ok"] and refused["error"] == "draft_method_unknown"
 
 
 if __name__ == "__main__":

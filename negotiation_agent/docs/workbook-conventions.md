@@ -76,7 +76,7 @@ An extra student in an odd-numbered class appears as the last row with no match 
 ## How the Instructor Pairs Students
 
 - **Used Car (first simulation of the term):** sort the class list alphabetically by last name, then first name. The first half are Buyers and the second half are Sellers, and they are matched in order: the first Buyer with the first Seller, and so on. With an odd count, the extra student becomes a second Seller in the last match.
-- **Later simulations:** she keeps the alphabetical halves and shifts the second half so nobody meets a former partner. The exact rule will be written down when later simulations are in scope.
+- **Salary negotiation (and later simulations):** she keeps the same sides and shifts the right column down one, moving the bottom student to the top (Meeting 3). Each student keeps their Used Car side, alphabetical within it; students new since then go on the smaller side, and after drops the sides are evened out.
 - **Nobody is the "1" in a 1v2 more than once a term** (Meeting 3): a student alone on their side of a three-person match, because of an odd count or an absence, shouldn't get that spot again in a later simulation.
 - **Roles are locked once role emails go out,** because each student already has the role packet for their role. Absence updates may move a student to another match, but never change their role.
 
