@@ -17,6 +17,16 @@
 4. With an odd count, the extra Seller joins the last match as a second Seller, unless that would make the last match's Buyer the "1" in a 1v2 for a second time, or repeat a partner. Then the extra student joins the nearest earlier match where neither happens (reported in `placement_notes`).
 5. Apply her swaps (`--swap`). Each swapped student takes the other's role and match.
 
+## Drafting (Salary negotiation and later rotations)
+
+1. Take the class list, minus students she named as absent.
+2. Each student keeps their side (first or second role) from the earlier simulation's draft table (`rotate_from` in the settings; `UC` for `SL`). Sort each side alphabetically.
+3. Students who weren't in that draft go on the smaller side. If the sides end up more than one apart (after drops), the alphabetically last students of the bigger side move to the other side.
+4. The right column moves down one, and the bottom student goes to the top. Match in order.
+5. An extra student is placed as in Used Car step 4. Apply her swaps.
+
+Every placement decision is in `placement_notes`. Repeats the rotation can't avoid are warnings for her review.
+
 **Writing:** names go into the draft table's numbered rows, starting at the first. A second same-role student goes on the next row with no match number. Unused numbered rows are cleared.
 
 ## Absences (her rule)

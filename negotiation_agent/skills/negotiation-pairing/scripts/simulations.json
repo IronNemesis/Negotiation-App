@@ -8,7 +8,8 @@
   "SL": {
     "name": "Salary negotiation",
     "roles": ["SUPERVISOR", "SUBORDINATE"],
-    "draft_method": null,
+    "draft_method": "rotate-second-half",
+    "rotate_from": "UC",
     "first_of_term": false
   }
 }

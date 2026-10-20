@@ -37,7 +37,9 @@ This shows the class size, missing emails, whether the draft and final tables ar
 python scripts/pairing.py draft --roster "<roster>.xlsx" [--absent "Name"]
 ```
 
-The draft uses her method: the class sorted alphabetically, the first half as Buyers and the second half as Sellers, matched in order. With an odd count, the extra student is a second Seller in the last match.
+For Used Car, the draft uses her method: the class sorted alphabetically, the first half as Buyers and the second half as Sellers, matched in order. With an odd count, the extra student is a second Seller in the last match.
+
+For the salary negotiation (`--simulation SL`), it uses her rotation: everyone keeps their Used Car side (Buyers on the left as Supervisors, Sellers on the right as Subordinates), and the right column moves down one, with the bottom student going to the top. Explain any `placement_notes` (students who changed side, or where the extra student went) in a line each. A repeat partner the rotation couldn't avoid shows as a warning: offer a swap to fix it.
 
 One effect to explain if it comes up: leaving out a student known to be absent shifts the halves, so the pairs after that point in the alphabet change. That is how her method works, not a mistake.
 
@@ -129,7 +131,8 @@ Explain the `message` plainly and say exactly which file and tab is affected.
 | `file_locked` | The workbook is open in Excel or syncing in OneDrive. Ask her to close it, then run the same command once more. |
 | `sim_tab_missing`, `sim_tab_layout`, `tab_too_short` | The simulation tab isn't prepared as expected (missing, a header renamed, or too few numbered rows). Name what's missing; she fixes the tab. Don't change it yourself. |
 | `class_list_missing`, `class_tab_ambiguous`, `duplicate_student` | The class list can't be read reliably. Name the tab and the problem. |
-| `draft_method_unknown` | Drafting this simulation isn't set up yet (only Used Car is). `check` and the absence steps still work on a draft she makes herself. |
+| `draft_method_unknown` | Drafting this simulation isn't set up yet (Used Car and the salary negotiation are). `check` and the absence steps still work on a draft she makes herself. |
+| `previous_draft_missing` | The salary rotation needs the Used Car draft to know each student's side, and the `UC` tab's draft table is empty. Ask her about it; don't fill it in yourself. |
 | `draft_has_errors`, `final_has_errors`, `warnings_not_accepted` | Go back to her review with the listed findings. |
 | `write_verification_failed` | Saving didn't produce exactly the intended change, so the backup was restored and nothing changed. Report it and stop. |
 | `unknown_student`, `bad_option` | A name or option didn't match; check the spelling against the class list. |

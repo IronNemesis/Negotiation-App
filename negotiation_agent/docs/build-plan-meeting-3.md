@@ -1,6 +1,6 @@
 # Build Plan: Meeting 3 Changes
 
-**Status:** Draft for Aidan's approval. Nothing below has been built.
+**Status:** Approved. Phases 1–5 are built and pushed; Phase 6 (the guide) and experimental dimensions remain.
 
 This plan turns the Meeting 3 decisions into changes to the two skills, their task specifications, and their tests. Items that depend on an open question say which assumption they build on; see [`open-questions.md`](open-questions.md). Each phase ends at a review checkpoint with a pushed commit, and every change is tested against the fictional examples only.
 
