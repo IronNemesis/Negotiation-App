@@ -3,9 +3,10 @@
 Commands (task IDs refer to negotiation_agent/agent/task-specs):
   prepare  T6 + T7  clean the export and match responses to the current matches; writes nothing
   build    T6-T8    the same, then write the bargaining range workbook next to the export
+  missing  T10      students in the current matches with no survey response, with a BCC list; writes a text file
 
-Both print one JSON object. "ok": false comes with an "error" code and a plain-language "message".
-Decisions from the instructor (H4) are passed to both commands with --assign, --use, --leave-out,
+Each prints one JSON object. "ok": false comes with an "error" code and a plain-language "message".
+Decisions from the instructor (H4) are passed to every command with --assign, --use, --leave-out,
 and --latest-duplicates.
 """
 from __future__ import annotations
@@ -20,6 +21,7 @@ import tempfile
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -31,6 +33,7 @@ from openpyxl.styles import Alignment, Font, PatternFill  # noqa: E402
 
 SETTINGS = json.loads((HERE / "simulations.json").read_text(encoding="utf-8"))
 ORANGE, LIGHT_RED, YELLOW, BAND = "F8CBAD", "FFC7CE", "FFFF00", "E2EFDA"
+ABSENT_LABEL = "Absent"
 PRICE_ORDER = ["INITIAL", "TARGET", "RESERVATION", "BATNA"]
 AUTHOR = "Claude (bargaining-range-sheet)"
 
@@ -180,10 +183,10 @@ def pool_students(people: list[Participant]) -> list[ns.Student]:
 
 
 def match_responses(responses, groups, absent, students, args):
-    present = [p for g in groups.values() for p in g]
-    by_name = {p.name: p for p in present}
-    absent_names = {p.name for p in absent}
-    present_pool, absent_pool = pool_students(present), pool_students(absent)
+    # Absent students' responses are kept too: they go in the absent block at the bottom of the sheet.
+    everyone = [p for g in groups.values() for p in g] + absent
+    by_name = {p.name: p for p in everyone}
+    pool = pool_students(everyone)
     by_rid = {r.rid: r for r in responses}
     decisions, unresolved, left_off = [], [], []
 
@@ -207,8 +210,8 @@ def match_responses(responses, groups, absent, students, args):
             claims[assigned[r.rid]].append(r)
             decisions.append(f"Response {r.rid} ({r.first} {r.last}) assigned to {assigned[r.rid]}")
             continue
-        res = ns.resolve_student(r.first, r.last, present_pool, r.email)
-        by_email = [s for s in present_pool if s.email and s.email == r.email]
+        res = ns.resolve_student(r.first, r.last, pool, r.email)
+        by_email = [s for s in pool if s.email and s.email == r.email]
         if res.confident and by_email and by_email[0].name != res.student.name:
             unresolved.append(unresolved_entry(r, "the name and the email point to different students",
                                                [res.student, by_email[0]]))
@@ -216,10 +219,6 @@ def match_responses(responses, groups, absent, students, args):
         if res.confident:
             r.match_how = res.how
             claims[res.student.name].append(r)
-            continue
-        res_absent = ns.resolve_student(r.first, r.last, absent_pool, r.email)
-        if res_absent.confident:
-            left_off.append(f"{res_absent.student.name} (absent; response {r.rid})")
             continue
         res_class = ns.resolve_student(r.first, r.last, students, r.email)
         if res_class.confident:
@@ -251,7 +250,7 @@ def match_responses(responses, groups, absent, students, args):
                                "reason": f"{name} submitted {len(rs)} times"})
 
     codes = SETTINGS_SIM["role_codes"]
-    for p in present:
+    for p in everyone:
         if p.response and p.response.role_code and p.response.role_code != str(codes[p.role]):
             chose = next((role for role, c in codes.items() if str(c) == p.response.role_code), p.response.role_code)
             p.role_conflict = f"Chose {chose.title()} in the survey; assigned {p.role.title()}."
@@ -268,7 +267,7 @@ def unresolved_entry(r: Response, reason: str, candidates) -> dict:
 def summarize(stage, groups, absent, removed, responses, decisions, unresolved, left_off, warnings):
     present = [p for g in groups.values() for p in g]
     cleaning = {"corrected": [], "unclear": [], "out_of_range": []}
-    owner = {p.response.rid: p.name for p in present if p.response}
+    owner = {p.response.rid: p.name for p in present + absent if p.response}
     for r in responses:
         who = owner.get(r.rid, f"{r.first} {r.last} (unmatched)")
         for q, a in r.prices.items():
@@ -291,6 +290,7 @@ def summarize(stage, groups, absent, removed, responses, decisions, unresolved, 
         "cleaning": cleaning,
         "left_off_sheet": left_off,
         "absent": [p.name for p in absent],
+        "absent_with_response": [p.name for p in absent if p.response],
         "decisions_applied": decisions,
         "tab_warnings": warnings,
         "unresolved": unresolved,
@@ -323,7 +323,7 @@ def fill(color):
     return PatternFill("solid", fgColor=color)
 
 
-def write_sheet(wb, title, roles, groups, item_headers, codes):
+def write_sheet(wb, title, roles, groups, absent, item_headers, codes):
     ws = wb.active
     ws.title = title
     headers = sheet_headers(roles, item_headers)
@@ -337,6 +337,38 @@ def write_sheet(wb, title, roles, groups, item_headers, codes):
         if c.value == "ACTUAL IO":
             c.fill = fill(YELLOW)
     expected = {}
+
+    def write_person(row: int, p: Participant, role: str) -> None:
+        cols = sides[role]
+        values = {"FIRST": p.first, "LAST": p.last, "ROLE": codes[role]}
+        r = p.response
+        if r:
+            values.update({q: r.prices[q].value for q in PRICE_ORDER})
+        for key, value in values.items():
+            ws.cell(row, cols[key], value)
+            expected[(row, cols[key])] = value
+        if r:
+            for col, value in zip(cols["ITEMS"], r.items):
+                ws.cell(row, col, value)
+                expected[(row, col)] = value
+            for q in PRICE_ORDER:
+                a = r.prices[q]
+                cell = ws.cell(row, cols[q])
+                if a.flag == "corrected":
+                    cell.fill = fill(ORANGE)
+                    cell.comment = Comment(f"Typed: {a.typed}\nRead as {a.value:,}.", AUTHOR)
+                elif a.flag == "unclear":
+                    cell.fill = fill(LIGHT_RED)
+                    cell.comment = Comment(f"Kept exactly as typed: {a.typed}", AUTHOR)
+                elif a.flag == "out_of_range":
+                    cell.fill = fill(LIGHT_RED)
+                    cell.comment = Comment(f"Typed: {a.typed}. Outside the usual range; check it.", AUTHOR)
+        else:
+            ws.cell(row, cols["FIRST"]).comment = Comment("No survey response.", AUTHOR)
+        if p.role_conflict:
+            ws.cell(row, cols["ROLE"]).fill = fill(LIGHT_RED)
+            ws.cell(row, cols["ROLE"]).comment = Comment(p.role_conflict, AUTHOR)
+
     row = 2
     for index, (match, people) in enumerate(sorted(groups.items())):
         by_role = {role: [p for p in people if p.role == role] for role in roles}
@@ -349,37 +381,16 @@ def write_sheet(wb, title, roles, groups, item_headers, codes):
                 ws.cell(row, 1, match)
                 expected[(row, 1)] = match
             for role in roles:
-                if k >= len(by_role[role]):
-                    continue
-                p, cols = by_role[role][k], sides[role]
-                values = {"FIRST": p.first, "LAST": p.last, "ROLE": codes[role]}
-                r = p.response
-                if r:
-                    values.update({q: r.prices[q].value for q in PRICE_ORDER})
-                for key, value in values.items():
-                    ws.cell(row, cols[key], value)
-                    expected[(row, cols[key])] = value
-                if r:
-                    for col, value in zip(cols["ITEMS"], r.items):
-                        ws.cell(row, col, value)
-                        expected[(row, col)] = value
-                    for q in PRICE_ORDER:
-                        a = r.prices[q]
-                        cell = ws.cell(row, cols[q])
-                        if a.flag == "corrected":
-                            cell.fill = fill(ORANGE)
-                            cell.comment = Comment(f"Typed: {a.typed}\nRead as {a.value:,}.", AUTHOR)
-                        elif a.flag == "unclear":
-                            cell.fill = fill(LIGHT_RED)
-                            cell.comment = Comment(f"Kept exactly as typed: {a.typed}", AUTHOR)
-                        elif a.flag == "out_of_range":
-                            cell.fill = fill(LIGHT_RED)
-                            cell.comment = Comment(f"Typed: {a.typed}. Outside the usual range; check it.", AUTHOR)
-                else:
-                    ws.cell(row, cols["FIRST"]).comment = Comment("No survey response.", AUTHOR)
-                if p.role_conflict:
-                    ws.cell(row, cols["ROLE"]).fill = fill(LIGHT_RED)
-                    ws.cell(row, cols["ROLE"]).comment = Comment(p.role_conflict, AUTHOR)
+                if k < len(by_role[role]):
+                    write_person(row, by_role[role][k], role)
+            row += 1
+    # Absent students stay on the sheet for later research: one blank row, then one row each, on their role's side.
+    if absent:
+        row += 1
+        for p in absent:
+            ws.cell(row, 1, ABSENT_LABEL)
+            expected[(row, 1)] = ABSENT_LABEL
+            write_person(row, p, p.role if p.role in sides else roles[0])
             row += 1
     legend = row + 1
     for offset, (color, text) in enumerate([
@@ -444,7 +455,32 @@ def safe_title(text: str) -> str:
 SETTINGS_SIM: dict = {}
 
 
-def run(args, build: bool):
+def missing_list(roster: Path, code: str, groups, unresolved) -> dict:
+    """T10: who in the current matches hasn't answered, as names and a BCC list. Absent students aren't included."""
+    present = [p for g in groups.values() for p in g]
+    duplicates = {u["student"] for u in unresolved if u["type"] == "duplicate"}
+    missing = sorted((p for p in present if not p.response and p.name not in duplicates), key=lambda p: p.name)
+    emails = [p.email for p in missing if p.email]
+    unmatched = [{"response": u["response"], "typed_name": u["typed_name"], "email": u["email"],
+                  "suggestions": u["suggestions"]} for u in unresolved if u["type"] == "unmatched"]
+    path = roster.parent / f"{code} survey missing {date.today().isoformat()}.txt"
+    lines = [f"No survey response yet ({len(missing)} students):", *[p.name for p in missing], "",
+             f"BCC ({len(emails)} addresses):", "; ".join(emails)]
+    if unmatched:
+        lines += ["", "Responses not yet matched to a student (one may belong to someone above):",
+                  *[f"{u['typed_name'] or '(no name)'} {u['email']}".strip() for u in unmatched]]
+    try:
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        saved = str(path)
+    except PermissionError:
+        saved = None
+    return {"missing": [p.name for p in missing], "bcc": "; ".join(emails),
+            "missing_email": [p.name for p in missing if not p.email],
+            "unmatched_responses": unmatched, "saved_to": saved}
+
+
+def run(args, mode: str):
+    build = mode == "build"
     started = time.time()
     if args.simulation not in SETTINGS:
         raise ns.SkillError("simulation_unknown", f"No settings for simulation '{args.simulation}'.",
@@ -458,6 +494,13 @@ def run(args, build: bool):
     decisions, unresolved, left_off = match_responses(responses, groups, absent, students, args)
     result = {"ok": True, **summarize(stage, groups, absent, removed, responses, decisions, unresolved, left_off,
                                       warnings)}
+    if mode == "missing":
+        listed = missing_list(roster, args.simulation, groups, unresolved)
+        ns.write_log(roster.parent, "T10 Survey non-respondents",
+                     f"{export.name}: {len(listed['missing'])} of {result['students']} students without a response, "
+                     f"{len(listed['unmatched_responses'])} responses not yet matched; matches from the {stage} table.")
+        ns.emit({"ok": True, "matches_from": result["matches_from"], "students": result["students"], **listed})
+        return
     if not build:
         ns.write_log(roster.parent, "T6-T7 Prepare bargaining sheet",
                      f"{export.name}: {result['students']} students, {len(responses)} responses kept, "
@@ -483,8 +526,8 @@ def run(args, build: bool):
         previous = ns.backup(out, "replaced")
 
     wb = Workbook()
-    expected = write_sheet(wb, safe_title(f"Week {args.week} {sim['name']}"), sim["roles"], groups, item_headers,
-                           sim["role_codes"])
+    expected = write_sheet(wb, safe_title(f"Week {args.week} {sim['name']}"), sim["roles"], groups, absent,
+                           item_headers, sim["role_codes"])
     write_roles_tab(wb, sim["roles"], groups)
     write_raw_tab(wb, raw_rows)
     with tempfile.TemporaryDirectory() as tmp:
@@ -513,7 +556,7 @@ def run(args, build: bool):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
-    for name in ("prepare", "build"):
+    for name in ("prepare", "build", "missing"):
         sp = sub.add_parser(name)
         sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
         sp.add_argument("--csv", required=True, help="The Qualtrics export (.csv)")
@@ -528,7 +571,7 @@ def main():
             sp.add_argument("--replace-in-class-entries", action="store_true",
                             help="Replace an existing sheet even though ACTUAL IO or OUTCOME has entries")
     args = p.parse_args()
-    run(args, build=args.command == "build")
+    run(args, args.command)
 
 
 if __name__ == "__main__":

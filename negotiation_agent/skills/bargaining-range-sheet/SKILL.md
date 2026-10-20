@@ -1,6 +1,6 @@
 ---
 name: bargaining-range-sheet
-description: Cleans a Qualtrics survey export for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) and builds the instructor's bargaining range sheet for the debrief, with one row per match, the Buyer on the left, OUTCOME in the middle, and the Seller mirrored on the right, using the matches from her roster workbook. Fixes obvious typos in prices and highlights them, keeps unclear answers as typed, matches responses to students by name and email, and leaves ACTUAL IO and OUTCOME blank for class. Use this skill whenever the instructor mentions a Qualtrics or survey export or CSV for a negotiation, the bargaining range sheet, bargaining zones, reservation prices or BATNAs from the survey, cleaning the survey data, or rebuilding the sheet after absences, even if she doesn't name the skill.
+description: Cleans a Qualtrics survey export for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) and builds the instructor's bargaining range sheet for the debrief, with one row per match, the Buyer on the left, OUTCOME in the middle, and the Seller mirrored on the right, using the matches from her roster workbook. Fixes obvious typos in prices and highlights them, keeps unclear answers as typed, matches responses to students by name and email, and leaves ACTUAL IO and OUTCOME blank for class. Use this skill whenever the instructor mentions a Qualtrics or survey export or CSV for a negotiation, the bargaining range sheet, bargaining zones, reservation prices or BATNAs from the survey, cleaning the survey data, rebuilding the sheet after absences or building it in class, or asks who hasn't filled out the survey yet, even if she doesn't name the skill.
 ---
 
 # Bargaining Range Sheet
@@ -44,7 +44,7 @@ Read the result. `matches_from` says whether the current matches are the **draft
   - `unclear`: answers kept exactly as typed and shown in light red, for example `>8,800` or a range.
   - `out_of_range`: numbers kept but outside the usual range, also light red, for example a BATNA of 200.
 - Role conflicts (`role_conflicts`): a student who picked the other role in the survey. Their assigned role is used and the cell is highlighted.
-- Anyone left off the sheet (`left_off_sheet`), such as an absent student who answered anyway.
+- Anyone left off the sheet (`left_off_sheet`): a class-list student who isn't in the current matches but answered anyway.
 - `tab_warnings`, if any: names on her tab that aren't on the class list.
 
 **3. Resolve anything unresolved (H4).** If `unresolved` isn't empty, put every item in that same message so she can answer at once:
@@ -66,9 +66,21 @@ python scripts/brs.py build --roster "<roster workbook>" --csv "<export>.csv" --
 
 The sheet is saved next to the export as `<course and term> Week <N> - Used Car Bargaining Range.xlsx`, with a `Roles` tab and a `Raw` tab holding the untouched export. Tell her where it is, the counts, and that the colors are explained in a legend under the table.
 
-**5. Re-run after absences.** On class day, once the pairing skill has written the final matches with absences, run `build` again with the same options. The result will say `matches_from: final table`. The previous sheet goes to the `Backups` folder next to it. Absent students are left off and listed in `left_off_sheet`; tell her who.
+**5. Re-run after absences.** On class day, once the pairing skill has written the final matches with absences, run `build` again with the same options. The result will say `matches_from: final table`. The previous sheet goes to the `Backups` folder next to it. Absent students (`absent`) stay on the sheet in a block marked `Absent` below the matches, with their answers if they gave any (`absent_with_response`); she keeps them for later research. Tell her who is there.
+
+**Day-of option.** She may prefer to skip the before-class build and build the sheet once in class, after the absences are written. Then do steps 1–4 once, after the pairing skill's final matches are in; `matches_from` will say `final table`. If it says `draft table` on class day, the final matches haven't been written yet: do the absence step with the pairing skill first, unless she says to go ahead with the draft.
 
 If the existing sheet already has anything typed in ACTUAL IO or OUTCOME, `build` stops with `in_class_entries_present` and lists the cells. Tell her and ask before doing anything. Only if she confirms she wants it replaced, add `--replace-in-class-entries`; the old file is still kept in `Backups`.
+
+## Who hasn't done the survey (T10)
+
+When she asks who hasn't filled out the survey (usually so she can email them a reminder), ask her to download the latest export from Qualtrics first, then run:
+
+```bash
+python scripts/brs.py missing --roster "<roster workbook>" --csv "<export>.csv" [her decisions]
+```
+
+Give her the names (`missing`) and the BCC list (`bcc`), ready to paste into Outlook, and say where the text file is saved. If `unmatched_responses` isn't empty, list those too: a student on the list may have answered under a misspelled name, so she may want to resolve those first (step 3). Name anyone in `missing_email`. Never send the email yourself.
 
 ## When something goes wrong (H1)
 

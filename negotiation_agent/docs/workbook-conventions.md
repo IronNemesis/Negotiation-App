@@ -114,6 +114,7 @@ The instructor's finished sheet, named like `BUS 4489 F26 Week 2 - Used Car Barg
 - `ACTUAL IO` (yellow headers) and `OUTCOME` are filled in **by hand during class**. The skill leaves them blank.
 - A second student in the same role gets their own row under the match, with the other side blank.
 - `ROLE` holds the Qualtrics code (`1` or `2`). Every other match row is shaded for readability.
+- **Absent students** stay on the sheet for later research (Meeting 3): after one blank row under the last match, one row each with `Absent` in `MATCH`, on their own role's side, with their survey answers if they gave any.
 - Other tabs: `Roles` (`MATCH | BUYER | SELLER`) and `Raw` (the untouched export).
 - Clean numbers are stored as numbers without `$` or commas. Unclear answers stay exactly as typed.
 

@@ -18,6 +18,7 @@ T8 writes the workbook the Instructor uses for the in-class debrief, in her exac
 - `ROLE` holds the Qualtrics code (`1` or `2`).
 - `ACTUAL IO` (yellow headers) and `OUTCOME` are left blank for her to fill in during class.
 - Every other match row is shaded, as in her sheets.
+- **Absent students** (after the absence update) stay on the sheet for later research (Meeting 3): one blank row under the last match, then one row per absent student with `Absent` in the `MATCH` column, on their own role's side, with their survey answers if they gave any. These rows are not shaded and are not part of any match.
 - Highlights from T6 and T7 are applied: orange for corrected typos, light red for unclear answers and role conflicts, with the original answer in a cell comment. A short color legend sits two rows below the table.
 
 **Other tabs:**
@@ -29,7 +30,7 @@ T8 writes the workbook the Instructor uses for the in-class debrief, in her exac
 - The course and term come from the roster workbook's name (for example `BUS 4489 F26`).
 - Claude asks for the week number, suggesting one if it can tell from the date.
 
-T8 runs twice per simulation: before class from the draft matches, and after the absence update from the final matches. On the second run, the previous file is moved to `Backups` first. If that file already has anything typed in `ACTUAL IO` or `OUTCOME`, T8 stops and asks her before replacing it, because she may have started filling it in.
+T8 normally runs twice per simulation: before class from the draft matches, and after the absence update from the final matches. She may instead skip the before-class build and build the sheet once in class, after the final matches are written (the day-of path, Meeting 3). T8 uses the final table whenever it has names, and its summary says which table it used. On a second run, the previous file is moved to `Backups` first. If that file already has anything typed in `ACTUAL IO` or `OUTCOME`, T8 stops and asks her before replacing it, because she may have started filling it in.
 
 ## 2. Inputs
 
@@ -60,12 +61,12 @@ T8 runs twice per simulation: before class from the draft matches, and after the
 - **Output name:** Bargaining range workbook
 - **Contents and format:** `<course and term> Week <N> - Used Car Bargaining Range.xlsx` with the main sheet, `Roles`, and `Raw`.
 - **Next task or recipient:** The Instructor, for the in-class debrief.
-- **Complete when:** Every student in the current matches appears exactly once, in their match's row or the row under it. Every number on the sheet equals its cleaned value from T6 on read-back. Every corrected or unclear value is highlighted and has its comment. `ACTUAL IO` and `OUTCOME` are empty.
+- **Complete when:** Every student in the current matches appears exactly once, in their match's row or the row under it, and every absent student appears once in the absent block. Every number on the sheet equals its cleaned value from T6 on read-back. Every corrected or unclear value is highlighted and has its comment. `ACTUAL IO` and `OUTCOME` are empty.
 
 ### Output 2
 
 - **Output name:** Build summary
-- **Contents and format:** Chat summary and log entry: matches, students with no response, corrected and unclear answers, role conflicts, absent students left off, and any previous file moved to `Backups`.
+- **Contents and format:** Chat summary and log entry: matches, students with no response, corrected and unclear answers, role conflicts, absent students (and which of them answered the survey), and any previous file moved to `Backups`.
 - **Next task or recipient:** The Instructor.
 - **Complete when:** The summary is shown and logged.
 

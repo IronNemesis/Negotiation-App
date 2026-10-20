@@ -35,7 +35,7 @@ Candidates are the students in the current matches: the final table if it has na
 3. Otherwise the response is **unresolved** and the instructor decides. This covers a unique last name with a different first name, two possible students, no match, or a name and email that point to different students.
 
 Further rules:
-- **Absent students:** a response from a student marked absent (`_0`) is left off the sheet and listed.
+- **Absent students:** students marked absent (`_0`) are matched like everyone else; they appear in the absent block at the bottom of the sheet, with their answers if they gave any.
 - **Not in the matches:** so is a response from a class-list student who isn't in the current matches.
 - **Duplicates:** two responses for one student are a duplicate for her to resolve.
 - **Role conflicts:** if the survey role differs from the assigned role, the assigned role is used and the `ROLE` cell is highlighted light red.
@@ -56,6 +56,7 @@ MATCH | FIRST LAST ROLE ACTUAL IO INITIAL TARGET RESERVATION BATNA items×6 | OU
 - **Shading:** alternate matches are shaded.
 - **Legend:** a legend under the table explains yellow, orange, and light red.
 - **No response:** a student without a response keeps their row, with a "No survey response" comment on their first name.
+- **Absent block:** after the absence update, one blank row under the last match, then one row per absent student with `Absent` in `MATCH`, on their own role's side (students absent from the draft go on the first role's side). Kept for later research; not shaded.
 
 The main tab is named `Week <N> <Simulation>` (for example `Week 2 Used Car`). Other tabs: `Roles` (`MATCH | BUYER | SELLER`) and `Raw` (the export exactly as downloaded).
 
