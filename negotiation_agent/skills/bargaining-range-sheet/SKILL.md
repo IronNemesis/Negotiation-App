@@ -72,6 +72,21 @@ The sheet is saved next to the export as `<course and term> Week <N> - Used Car 
 
 If the existing sheet already has anything typed in ACTUAL IO or OUTCOME, `build` stops with `in_class_entries_present` and lists the cells. Tell her and ask before doing anything. Only if she confirms she wants it replaced, add `--replace-in-class-entries`; the old file is still kept in `Backups`.
 
+## The survey's name dropdown
+
+Students can pick their name from a dropdown in the survey instead of typing it, which makes matching exact. When she sets up a survey with that question, make the list to paste into Qualtrics:
+
+```bash
+python scripts/brs.py names --roster "<roster workbook>" [--simulation UC]
+```
+
+Give her the names (one per line, `Last, First`) and tell her to paste them into the dropdown question's choices as they are, in that order. The list is also saved as `<code> survey names.txt` next to her roster workbook. Tell her to leave that file alone: Qualtrics exports each answer as its position in the list, and the skill uses the file to turn those numbers back into names.
+
+- **`names_list_exists`:** a different list was saved earlier (the class list has changed since). If a survey already uses the old list, keep it. Only for a new survey, or if she re-pastes the choices, add `--replace` (the old file is backed up).
+- **`names_list_missing`** (from `prepare` or `build`): the export has the dropdown as numbers but the file isn't there. Ask her to put it back, or to re-download the export with "Use choice text" for the name question.
+
+`prepare` reports `name_dropdown_column` when it found the question. If she says the survey has a dropdown but it shows `null`, ask her for the question's code (for example `Q13`, in the first row of the export) and pass `--name-column Q13` to every command.
+
 ## Who hasn't done the survey (T10)
 
 When she asks who hasn't filled out the survey (usually so she can email them a reminder), ask her to download the latest export from Qualtrics first, then run:
@@ -95,6 +110,7 @@ Explain the `message` plainly and say exactly which file is affected.
 | `no_matches` | The matches haven't been drafted yet. That's the pairing skill's job, so do that first. |
 | `unresolved_responses` | Go back to step 3 with the listed items. |
 | `in_class_entries_present` | See step 5. |
+| `names_list_exists`, `names_list_missing` | See "The survey's name dropdown" above. |
 | `course_unknown` | Ask her for the course and term (for example "BUS 4489 F26") and pass `--course`. |
 
 Each run is recorded in `Negotiation Log.xlsx` next to her roster workbook. If an error isn't listed here, report the message and stop; don't improvise around it.

@@ -100,6 +100,8 @@ The instructor downloads a CSV with three header rows: column codes (`Q1`, `Q2`,
 | `Q12_1`–`Q12_6` | Six "after this negotiation, my partner will…" items | Copied as-is |
 | `Q11` | Email address (often a personal Gmail) | Matching to the class list |
 
+**Name dropdown (Meeting 3).** She is adding a question where students pick their name from a dropdown list instead of typing it. The `bargaining-range-sheet` skill produces the list (the class list as `Last, First`, alphabetical) and saves it as `<code> survey names.txt` next to the roster workbook; she pastes it into the question's choices. The export gives each answer as its position in that list, so the file must stay unchanged while the survey is in use. The question's code is set as `name_choice` in the skill's settings, or found from its wording. **(Assumption: names shown as `Last, First`; the email question stays optional.)**
+
 Answers are typed freely, so they arrive as `13000`, `$13000`, `"12,000"`, `>8,800`, `$10,500-10,250`, `$8,800 (sell to dealer)`, or occasionally a typo such as `10` for 10,000. Names arrive with stray spaces, lowercase, or nicknames (`Andrew` for `Andy`). Some responses are completely blank.
 
 ## The Bargaining Range Sheet (Used Car)

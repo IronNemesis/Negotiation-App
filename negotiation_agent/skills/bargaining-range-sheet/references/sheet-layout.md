@@ -30,6 +30,8 @@ Rows are removed (and counted) when every answer is blank, or when `Status` isn'
 
 Candidates are the students in the current matches: the final table if it has names, otherwise the draft table.
 
+**Name dropdown first.** If the survey has a name dropdown (`name_choice` in the settings, `--name-column`, or the one other question whose wording mentions "name"), a picked name is used before anything typed. Numeric answers are read as lines of `<code> survey names.txt` next to the roster workbook (the list pasted into Qualtrics); text answers are used as they are. The picked name must be on the class list; the student is then found in the current matches by name or class-list email. A blank dropdown falls back to the rules below.
+
 1. **Exact name**, ignoring case, accents, extra spaces, and apostrophes; or **class-list email**.
 2. **Nickname**: same last name (no other student shares it) and a known nickname or shortened first name ("Andrew"/"Andy", "Katie"/"Katherine", "Dan"/"Daniel").
 3. Otherwise the response is **unresolved** and the instructor decides. This covers a unique last name with a different first name, two possible students, no match, or a name and email that point to different students.
