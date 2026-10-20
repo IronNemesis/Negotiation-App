@@ -159,6 +159,45 @@ def test_stranded_student_who_doesnt_fit_needs_her_choice():
     assert placed["ok"] and not placed["errors"] and not placed["needs_placement"], placed
 
 
+def drop_from_class_list(path: Path, name: str) -> None:
+    wb = load_workbook(path)
+    ws = wb["Att - Fall"]
+    row = next(c.row for c in ws["B"] if c.value == name)
+    ws.delete_rows(row)
+    wb.save(path)
+
+
+def test_student_who_dropped_after_the_draft_is_treated_as_absent():
+    folder = workspace()
+    drop_from_class_list(folder / DRAFTED, "Bennett, Owen")  # the only Buyer in match 3
+    check = run(folder, "check", "--roster", DRAFTED)
+    assert check["ok"] and not check["errors"], check
+    assert any("Bennett, Owen" in w and "listed as absent" in w for w in check["warnings"])
+    # Not named as absent: still listed as absent, and the partner moves under her rule.
+    for named in ([], ["--absent", "Bennett"]):
+        proposal = run(folder, "absences", "--roster", DRAFTED, *named)
+        assert proposal["ok"] and not proposal["errors"], proposal
+        assert proposal["absent"] == ["Bennett, Owen"] and proposal["dropped"] == ["Bennett, Owen"]
+        assert any("Nguyen, Katherine joins match 2" in m and "no longer on the class list" in m
+                   for m in proposal["moves"])
+    written = run(folder, "write-final", "--roster", DRAFTED)
+    assert written["ok"], written
+    tab = uc_tab(folder / DRAFTED)
+    assert [(m.name, m.role, m.pair_id) for m in tab.absent] == [("Bennett, Owen", "BUYER", "UC_0")]
+    assert 3 not in tab.groups(tab.final_members)
+
+
+def test_a_likely_name_is_still_asked_about_not_treated_as_dropped():
+    folder = workspace()
+    wb = load_workbook(folder / DRAFTED)
+    ws = wb["Att - Fall"]
+    next(c for c in ws["B"] if c.value == "Bennett, Owen").value = "Bennett, Oliver"  # same last name, new first
+    wb.save(folder / DRAFTED)
+    proposal = run(folder, "absences", "--roster", DRAFTED)
+    assert proposal["ok"] and not proposal["dropped"]
+    assert any("may be Bennett, Oliver" in e for e in proposal["errors"]), proposal["errors"]
+
+
 def test_roles_are_locked_after_emails_go_out():
     folder = workspace()
     assert run(folder, "roles-sent", "--roster", DRAFTED)["ok"]

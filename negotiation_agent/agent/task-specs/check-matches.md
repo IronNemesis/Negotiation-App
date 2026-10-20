@@ -18,11 +18,11 @@ The rules are:
 1. Every student on the class list appears exactly once, unless absent.
 2. No absent student appears in a match.
 3. Every match has at least one Buyer and one Seller. At most one role in a match has a second student.
-4. No student appears who is not on the class list.
+4. No student appears who is not on the class list. In a draft, this is a warning instead: a drafted student who has since dropped the class is listed as absent by T9 at the absence step, so she only needs to correct it if the name is misspelled.
 5. In the absence update only, no student's role differs from their role in the draft, because role packets have already been sent.
 6. Two students in the same match who already share a pair ID other than `_0` from an earlier simulation are flagged as a repeat.
 
-Rules 1–5 are errors that block approval. Rule 6 is a warning the Instructor may accept. For Used Car, the first simulation of the term, rule 6 normally finds nothing, but it runs anyway, so it is already tested when later simulations are added. T3 reports problems but never changes the matches or undoes her edits.
+Rules 1–5 are errors that block approval (except rule 4 on a draft, as above). Rule 6 is a warning the Instructor may accept. For Used Car, the first simulation of the term, rule 6 normally finds nothing, but it runs anyway, so it is already tested when later simulations are added. T3 reports problems but never changes the matches or undoes her edits.
 
 ## 2. Inputs
 

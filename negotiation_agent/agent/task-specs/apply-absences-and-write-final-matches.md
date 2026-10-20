@@ -13,7 +13,7 @@ At the start of class, the Instructor knows who is absent. T9 turns the draft in
 
 Starting from the draft table as it currently stands in the tab (including any edits she made):
 
-1. Each absent student is removed from their match and recorded as absent, with ID `<code>_0` (for example `UC_0`).
+1. Each absent student is removed from their match and recorded as absent, with ID `<code>_0` (for example `UC_0`). A drafted student who is no longer on the class list has dropped the class: T9 treats them as absent this week even if she doesn't name them, and says so in the proposal. On later simulations they aren't on the class list, so they are left off; their earlier pair IDs stay on earlier tabs. A name that is only "likely" a class-list student (same last name, different first name) is still asked about, never treated as dropped.
 2. If a match still has at least one Buyer and one Seller, nothing else changes.
 3. If a match loses its only student in a role, its remaining students are stranded. Each stranded student joins the **match just before theirs** (the nearest lower match number still in use) as an extra student in the same role. If there is no earlier match, they join the next one. The dissolved match number simply disappears; nothing is renumbered.
 4. If joining that match would give it more than three students, or would create a repeat partner from an earlier simulation, T9 doesn't choose: it asks the Instructor where the student should go (part of H6).
@@ -23,7 +23,7 @@ The proposed final matches are checked by T3, including the rule that no student
 After she confirms, T9 writes the final table at the top of the simulation tab:
 - One row per match: match number in column A; Buyer name, email, and pair ID; Seller name, email, and pair ID (`<code>_<match>`).
 - Extra same-role students go on the row under their match, with column A and the other role blank.
-- Absent students are listed two rows below the table, with name, email, and `<code>_0`.
+- Absent students are listed two rows below the table, under their own role's columns, with name, email, and `<code>_0`. A student who dropped has no class-list email, so their email cell is left blank.
 - Prefilled match numbers in column A that the final table doesn't use are cleared, but only cells that contain nothing but a number, and only above the draft table.
 - `Gender` and `Intervention` are left untouched.
 

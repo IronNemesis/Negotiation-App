@@ -52,7 +52,8 @@ Used Car layout (row 1 is the header):
 This is the final version of the draft shown further down, after Evans, Jo was absent.
 
 - **A second student in the same role** (because of an odd count or an absence) gets their own row directly under the match, with the match number and the other role's cells left blank, and shares the match's pair ID (`UC_3` above).
-- **Absent students** are listed a few rows below the table, under their own role's columns, with their name, email, and `UC_0` **(assumption: the instructor's UC tab lists the absent student without an ID; her later tabs show `UC_0`)**.
+- **Absent students** are listed a few rows below the table, under their own role's columns, with their name, email, and `UC_0` (confirmed in Meeting 3).
+- **Students who drop the class** keep their history on earlier tabs. On the tab for the week they drop, they are listed as absent; on later tabs they are left off (confirmed in Meeting 3).
 - `Gender` and `Intervention` are filled in by the instructor. The skills leave them blank and never change them.
 - **Later simulations carry history forward:** each student's earlier pair IDs appear in columns headed with the earlier simulations' codes, before the current one. For example, the `SL` tab has `Email | UC | SL` for each role. Used Car is the first simulation of the term, so its tab has only the `UC` column.
 
@@ -80,7 +81,7 @@ An extra student in an odd-numbered class appears as the last row with no match 
 
 ## Absences in Class
 
-When a student is absent, they get `_0`, and their partner joins the **match just before theirs** as a second student in the same role **(assumption: rule seen twice in her UC tab, not yet confirmed)**. Example from the draft above: if Evans, Jo (match 4) is absent, Quinn, Ava joins match 3 as a second Seller; match 4 disappears; Evans, Jo is listed below the table with `UC_0`.
+When a student is absent, they get `_0`, and their partner joins the **match just before theirs** as a second student in the same role (confirmed in Meeting 3, with an exception "once we start moving forward" still to be clarified). Example from the draft above: if Evans, Jo (match 4) is absent, Quinn, Ava joins match 3 as a second Seller; match 4 disappears; Evans, Jo is listed below the table with `UC_0`.
 
 If the match just before would create a repeat partner (possible in later simulations), the skill warns and asks the instructor where the student should go.
 

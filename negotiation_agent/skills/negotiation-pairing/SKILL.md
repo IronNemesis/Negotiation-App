@@ -97,6 +97,7 @@ Results that need her answer:
 - **`needs_placement`:** a stranded student can't join the previous match, because it would have more than three students or repeat a partner. Ask where they should go, then pass `--place "Last, First=MATCH"`.
 - **An error that a tab name "may be" a class-list student:** her draft uses a different first name (for example a legal name). Ask her to confirm, then pass `--same-person "Tab Name=Class Name"`.
 - **Class-list students who aren't in the draft:** usually absent students she already knew about. Confirm, then include them with `--absent`.
+- **`dropped`:** drafted students who are no longer on the class list. They're listed as absent (`UC_0`) automatically, as she asked for students who drop. Tell her in one line, so she can say if it's a misspelled name instead; they won't appear on later simulations' tabs.
 
 **7. Confirm (H6).** Show the final matches compactly, plus each move in one line, as listed in `moves`. On her clear yes, write the final table with the same options:
 
