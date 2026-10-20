@@ -25,7 +25,7 @@ Anything else is unresolved and goes to H4, with the closest students suggested.
 Further rules:
 - **Role conflict:** if a student's survey role differs from their assigned role, the assigned role wins and the `ROLE` cell is highlighted light red with a comment, because students sometimes click the wrong option.
 - **No response:** students with no matched response keep their place on the sheet with blank answers.
-- **Absent students:** after the absence update, a response from an absent student is left off the sheet and listed in the summary (assumption; see open questions).
+- **Absent students:** after the absence update, absent students (`_0`) are matched like everyone else. Their responses, if any, go in the absent block at the bottom of the sheet (T8), which she keeps for later research (Meeting 3).
 
 ## 2. Inputs
 

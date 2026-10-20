@@ -50,8 +50,8 @@ python negotiation_agent/examples/tools/make_examples.py
 | Dev Shah | A Seller who chose Buyer | Assigned role kept, `ROLE` highlighted light red |
 | Simone Hale | Submitted twice | Asked about (H4), "use the latest" offered |
 | Owen Bennett, Mia Underwood | No response | Row kept with blank answers |
-| Tolu Adebayo | Absent and no response | Left off after the absence update |
-| Rosa Castellano | Absent but responded | On the sheet before class; left off after the absence update |
+| Tolu Adebayo | Absent and no response | In the absent block after the absence update, with blank answers; on the non-respondent list before class |
+| Rosa Castellano | Absent but responded | On the sheet before class; in the absent block, with her answers, after the absence update |
 | (none) | One completely blank response and one "Survey Preview" response | Removed and counted in the summary |
 
 Most other students use a mix of answer formats (`7800`, `$7800`, `7,800`, `$7,800`, a trailing space) that should all clean to plain numbers without highlights.

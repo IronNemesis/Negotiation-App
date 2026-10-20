@@ -9,7 +9,7 @@ This workflow supports the system goal defined in `negotiation_agent/README.md`.
 The workflow has three stages, each started by the Instructor in the Claude desktop app:
 
 - **Stage 1 (Draft):** a few days before class, she asks Claude to draft the matches for a simulation, optionally naming students she already knows will be absent. Skill: `negotiation-pairing`.
-- **Stage 2 (Bargaining sheet):** after the survey closes, a few hours before class, she saves the Qualtrics export and asks Claude to build the bargaining range sheet. Skill: `bargaining-range-sheet`.
+- **Stage 2 (Bargaining sheet):** after the survey closes, a few hours before class, she saves the Qualtrics export and asks Claude to build the bargaining range sheet. Skill: `bargaining-range-sheet`. While the survey is open, she can also ask who hasn't answered yet (T10). On the **day-of path**, she skips this stage and builds the sheet once in class, after Stage 3.
 - **Stage 3 (Absences):** at the start of class, she tells Claude who is absent. Skill: `negotiation-pairing`, followed by a quick re-run of `bargaining-range-sheet`.
 
 ### 1.3 Completion Condition at Runtime
@@ -33,12 +33,13 @@ All pairing records live in the Instructor's roster workbook, one tab per simula
 - **T6: Clean Survey Export** normalizes the answers, fixing obvious typos and marking unclear answers.
 - **T7: Match Survey Responses to Students** connects each response to a student in the current matches.
 - **H4: Resolve Survey Matches** handles any response that cannot be matched with confidence.
-- **T8: Build Bargaining Range Sheet** writes her mirrored, one-row-per-match layout.
+- **T8: Build Bargaining Range Sheet** writes her mirrored, one-row-per-match layout, with absent students in a block at the bottom after the absence update.
+- **T10: List Survey Non-Respondents** (any time the survey is open) lists the students in the current matches with no response, with a BCC list, so she can email them a reminder.
 
 **Stage 3 (Absences).**
 - **H5: Report Absences:** the Instructor names the absent students.
 - **T9: Apply Absences and Write Final Matches** gives absent students `_0`, moves each stranded partner into the previous match in the same role, re-checks the result with T3, and asks her to confirm.
-- **H6: Confirm Final Matches.** Once she confirms, the final table is written. She then asks Claude to re-run Stage 2, which rebuilds the bargaining range sheet from the final matches in a minute or two.
+- **H6: Confirm Final Matches.** Once she confirms, the final table is written. She then asks Claude to re-run Stage 2, which rebuilds the bargaining range sheet from the final matches in a minute or two. On the day-of path, this is the first and only build of the sheet.
 
 **Exception paths.**
 - If a file cannot be read, a tab is missing, or a tab doesn't match the expected layout, the run stops and the Instructor performs **H1: Resolve Workbook or Survey Data Issue**. Nothing is written from missing or misread data.
@@ -71,6 +72,8 @@ flowchart TD
 
     Trigger2(["Trigger: Survey Closed, Export Saved"]) --> T6["T6: Clean Survey Export"]
     End1 -.->|"Before Class"| Trigger2
+    End1 -.->|"Survey Open"| T10["T10: List Survey Non-Respondents"]
+    T10 --> Remind(["Instructor Emails Reminders"])
     T6 --> T7["T7: Match Survey Responses to Students"]
     T7 --> D3{"Every Response Matched with Confidence?"}
     D3 -->|"No"| H4["H4: Resolve Survey Matches"]
@@ -79,12 +82,13 @@ flowchart TD
     T8 --> End2(["Stage 2 Complete: Sheet Built from Draft"])
 
     End2 -.->|"Start of Class"| H5["H5: Report Absences"]
+    End1 -.->|"Day-of Path: Skip Stage 2"| H5
     H5 --> T9["T9: Apply Absences and Write Final Matches"]
     T9 --> D4{"Previous Match Creates a Repeat?"}
     D4 -->|"Yes"| H6b["Instructor Chooses Placement"]
     H6b --> H6
     D4 -->|"No"| H6["H6: Confirm Final Matches"]
-    H6 --> Rerun["Re-run T6 to T8 with Final Matches"]
+    H6 --> Rerun["Run T6 to T8 with Final Matches"]
     Rerun --> End3(["Stage 3 Complete: Final Matches and Sheet Ready"])
     End3 -.-> Class(["Instructor Fills ACTUAL IO and OUTCOME in Class"])
 ```
@@ -102,6 +106,7 @@ flowchart TD
 | T7 | [Match Survey Responses to Students](task-specs/match-survey-responses-to-students.md) | Reason | Agent | bargaining sheet |
 | T8 | [Build Bargaining Range Sheet](task-specs/build-bargaining-range-sheet.md) | Act | Agent | bargaining sheet |
 | T9 | [Apply Absences and Write Final Matches](task-specs/apply-absences-and-write-final-matches.md) | Remember | Agent | pairing |
+| T10 | [List Survey Non-Respondents](task-specs/list-survey-non-respondents.md) | Retrieve | Agent | bargaining sheet |
 | H1 | [Resolve Workbook or Survey Data Issue](task-specs/resolve-workbook-or-survey-data-issue.md) | Verify | Instructor | both |
 | H2 | [Review Draft Matches](task-specs/review-draft-matches.md) | Verify | Instructor | pairing |
 | H3 | [Send Role Emails](task-specs/send-role-emails.md) | Act | Instructor | pairing |

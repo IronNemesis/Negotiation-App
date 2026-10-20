@@ -179,7 +179,6 @@ def test_rerun_after_absences_uses_final_matches():
     assert result["ok"], result
     assert result["matches_from"] == "final table" and result["matches"] == 17
     assert result["previous_version_backup"] and Path(result["previous_version_backup"]).exists()
-    assert any(s.startswith("Castellano, Rosa (absent") for s in result["left_off_sheet"])
     ws, header, rows = sheet_rows(folder / SHEET)
     people = people_on_sheet(ws, header, rows)
     assert set(people) == {n for m in EXPECTED["final"] for r in ("BUYER", "SELLER") for n in m[r]}
@@ -188,6 +187,38 @@ def test_rerun_after_absences_uses_final_matches():
     for name, match in (("Mendes, Rafael", 2), ("O'Neill, Siobhan", 4)):
         r = people[name][0]
         assert ws.cell(r, 1).value is None and ws.cell(r - 1, 1).value == match, name
+    # Absent students stay on the sheet, after one blank row, on their role's side, with any answers they gave.
+    assert result["absent"] == ["Adebayo, Tolu", "Castellano, Rosa", "Zimmerman, Tess"]
+    assert result["absent_with_response"] == ["Castellano, Rosa", "Zimmerman, Tess"] and not result["left_off_sheet"]
+    block = list(range(rows[-1] + 2, rows[-1] + 5))
+    assert ws.cell(rows[-1] + 1, 1).value is None and [ws.cell(r, 1).value for r in block] == ["Absent"] * 3
+    absent = people_on_sheet(ws, header, block)
+    assert {n: side for n, (_, side, _) in absent.items()} == {
+        "Adebayo, Tolu": "BUYER", "Castellano, Rosa": "BUYER", "Zimmerman, Tess": "SELLER"}
+    initial = header.index("INITIAL") + 1
+    assert isinstance(ws.cell(absent["Castellano, Rosa"][0], initial).value, int)
+    assert ws.cell(absent["Adebayo, Tolu"][0], initial).value is None
+    assert "No survey response" in ws.cell(absent["Adebayo, Tolu"][0], 2).comment.text
+
+
+def test_missing_lists_who_hasnt_answered():
+    folder = workspace()
+    result = run(folder, "missing", "--roster", DRAFTED, "--csv", CSV)
+    assert result["ok"] and result["matches_from"] == "draft table"
+    # Jordan Evans and Danielle Park typed their names differently, so until she resolves those responses they
+    # count as missing, and the responses are listed alongside so she can tell.
+    assert result["missing"] == ["Adebayo, Tolu", "Bennett, Owen", "Evans, Jordan", "Park, Danielle",
+                                 "Underwood, Mia"]
+    assert {u["typed_name"] for u in result["unmatched_responses"]} == {"Jordan Evens", "Dani Park"}
+    assert result["bcc"].split("; ")[1] == "obennett@example.edu" and len(result["bcc"].split("; ")) == 5
+    assert "Hale, Simone" not in result["missing"]  # submitted twice: answered, just a duplicate to resolve
+    assert Path(result["saved_to"]).exists()
+    resolved = run(folder, "missing", "--roster", DRAFTED, "--csv", CSV, *DECISIONS)
+    assert resolved["missing"] == ["Adebayo, Tolu", "Bennett, Owen", "Underwood, Mia"]
+    assert not resolved["unmatched_responses"]
+    # After absences, absent students aren't chased.
+    final = run(folder, "missing", "--roster", AFTER, "--csv", CSV, *DECISIONS)
+    assert final["matches_from"] == "final table" and "Adebayo, Tolu" not in final["missing"]
 
 
 def test_existing_in_class_entries_are_protected():
