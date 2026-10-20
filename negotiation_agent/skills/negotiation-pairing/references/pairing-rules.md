@@ -21,7 +21,7 @@
 
 ## Absences (her rule)
 
-1. Absent students leave their match and get `<code>_0`.
+1. Absent students leave their match and get `<code>_0`. A drafted student who is no longer on the class list dropped the class: they are treated as absent this week, even if she doesn't name them, and simply aren't on the class list for later simulations. Their earlier pair IDs still count as history.
 2. A match that still has at least one student in each role stays as it is.
 3. Otherwise its remaining students are stranded. Each one joins the nearest earlier match still in use, in the same role. If there is no earlier match, they join the next one.
 4. If joining would give that match more than three students, or repeat a partner from an earlier simulation, the script doesn't choose: she places the student with `--place`.
@@ -41,12 +41,14 @@
 - an absent student is in a match;
 - a match lacks a role;
 - a match has more than three students;
-- a name isn't on the class list, or is only "likely";
+- a name is only "likely" a class-list student;
+- in the final matches, a name isn't on the class list (dropped students are listed as absent instead);
 - in the final matches, a role differs from the draft, or a class-list student is in no match and not reported absent.
 
 **Warnings** need her OK:
 - repeat partners from earlier simulations;
-- in a draft, a class-list student not in any match.
+- in a draft, a class-list student not in any match;
+- in a draft, a name that isn't on the class list (she may have dropped the class; she'll be listed as absent in class).
 
 ## Safety on Every Write
 

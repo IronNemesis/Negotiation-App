@@ -126,8 +126,12 @@ def check_groups(ctx: Context, groups: dict[int, list[Person]], absent: list[Per
                 errors.append(f"'{p.tab_name}' on the {ctx.code} tab isn't on the class list; it may be "
                               f"{p.student.name}. Confirm it's the same person.")
             elif p.link == "none":
-                errors.append(f"'{p.tab_name or p.name}' is in match {match} but isn't on the class list "
-                              "(dropped the class, or a different spelling?).")
+                message = f"'{p.tab_name or p.name}' is in match {match} but isn't on the class list"
+                if stage == "final":
+                    errors.append(message + " (dropped the class, or a different spelling?).")
+                else:  # a student who dropped after the draft is treated as absent at the absence step
+                    warnings.append(message + ". If they dropped the class, they'll be listed as absent in class; "
+                                              "if it's a different spelling, correct the name.")
             if draft_roles is not None and p.key in draft_roles and draft_roles[p.key] != p.role:
                 errors.append(f"{p.name} was a {draft_roles[p.key].title()} in the draft and can't become a "
                               f"{p.role.title()}: role packets have already gone out.")
@@ -419,6 +423,11 @@ def propose_final(ctx: Context, args):
     if problems:
         raise ns.SkillError("absence_unclear", "Some absent students couldn't be matched to one student in the draft.",
                             {"unclear": problems})
+    # A drafted student no longer on the class list dropped the class: absent this week, left off later tabs.
+    # A name that is only "likely" a class-list student is still asked about, never treated as dropped.
+    named = {p.key for p in absent}
+    dropped = [p for p in everyone if p.link == "none"]
+    absent += [p for p in dropped if p.key not in named]
     absent_keys = {p.key for p in absent}
     remaining = {m: [p for p in ps if p.key not in absent_keys] for m, ps in groups.items()}
     complete = {m for m, ps in remaining.items() if all(any(p.role == r for p in ps) for r in ctx.roles)}
@@ -435,7 +444,9 @@ def propose_final(ctx: Context, args):
         stranded = remaining[m]
         if not stranded:
             continue
-        lost = ", ".join(p.name for p in groups[m] if p.key in absent_keys)
+        gone = [p for p in groups[m] if p.key in absent_keys]
+        lost = ", ".join(p.name for p in gone)
+        why = ("is no longer on the class list" if all(p in dropped for p in gone) else "is absent")
         for p in stranded:
             if p.key in placements:
                 target, how = placements[p.key], "placed by the instructor"
@@ -455,22 +466,25 @@ def propose_final(ctx: Context, args):
                     continue
             final[target].append(p)
             moves.append(f"{p.name} joins match {target} as a second {p.role.title()} because {lost} "
-                         f"(match {m}) is absent; {how}.")
+                         f"(match {m}) {why}; {how}.")
     all_absent = absent + extra_absent
     checks = check_groups(ctx, final, all_absent, "final", draft_roles)
     if needs_placement:
         checks["errors"].append("Some stranded students need the instructor to choose a match.")
-    return final, all_absent, moves, needs_placement, checks, draft_roles
+    return final, all_absent, dropped, moves, needs_placement, checks, draft_roles
 
 
 def cmd_absences(args, write: bool = False):
     ctx = Context(args)
-    final, absent, moves, needs_placement, checks, _ = propose_final(ctx, args)
-    result = {"ok": True, "simulation": ctx.code, "absent": [p.name for p in absent], "moves": moves,
+    final, absent, dropped, moves, needs_placement, checks, _ = propose_final(ctx, args)
+    result = {"ok": True, "simulation": ctx.code, "absent": [p.name for p in absent],
+              "dropped": [p.name for p in dropped], "moves": moves,
               "needs_placement": needs_placement, "final": table_preview(final, ctx.roles), "matches": len(final),
               **checks}
     if not write:
-        ctx.log("T9 Absence proposal", f"Absent: {[p.name for p in absent] or 'none'}; moves: {moves or 'none'}; "
+        ctx.log("T9 Absence proposal", f"Absent: {[p.name for p in absent] or 'none'}; "
+                                       f"no longer on the class list: {[p.name for p in dropped] or 'none'}; "
+                                       f"moves: {moves or 'none'}; "
                                        f"{checks['summary']}.")
         ns.emit(result)
         return
