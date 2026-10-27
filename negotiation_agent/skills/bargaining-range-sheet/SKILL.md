@@ -1,6 +1,6 @@
 ---
 name: bargaining-range-sheet
-description: Cleans a Qualtrics survey export for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) and builds the instructor's bargaining range sheet for the debrief, with one row per match, the Buyer on the left, OUTCOME in the middle, and the Seller mirrored on the right, using the matches from her roster workbook. Fixes obvious typos in prices and highlights them, keeps unclear answers as typed, matches responses to students by name and email, and leaves ACTUAL IO and OUTCOME blank for class. Use this skill whenever the instructor mentions a Qualtrics or survey export or CSV for a negotiation, the bargaining range sheet, bargaining zones, reservation prices or BATNAs from the survey, cleaning the survey data, rebuilding the sheet after absences or building it in class, or asks who hasn't filled out the survey yet, even if she doesn't name the skill.
+description: Cleans a Qualtrics survey export for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) and builds the instructor's bargaining range sheet for the debrief, with one row per match, the Buyer on the left, OUTCOME in the middle, and the Seller mirrored on the right, using the matches from her roster workbook. Fixes obvious typos in prices and highlights them, keeps unclear answers as typed, matches responses to students by name and email, and leaves ACTUAL IO and OUTCOME blank for class. Use this skill whenever the instructor mentions a Qualtrics or survey export or CSV for a negotiation, the bargaining range sheet, bargaining zones, reservation prices or BATNAs from the survey, cleaning the survey data, rebuilding the sheet after absences or building it in class, asks who hasn't filled out the survey yet, or wants the Salary negotiation outcomes sheet built from the Salary surveys and the in-class Google Form responses, even if she doesn't name the skill.
 ---
 
 # Bargaining Range Sheet
@@ -72,6 +72,35 @@ The sheet is saved next to the export as `<course and term> Week <N> - Used Car 
 
 If the existing sheet already has anything typed in ACTUAL IO or OUTCOME, `build` stops with `in_class_entries_present` and lists the cells. Tell her and ask before doing anything. Only if she confirms she wants it replaced, add `--replace-in-class-entries`; the old file is still kept in `Backups`.
 
+## The Salary negotiation outcomes sheet (T11)
+
+For the Salary negotiation (`--simulation SL`), she builds a complete outcomes sheet **in class**, right after the negotiation, to debrief on the spot. It combines three files:
+- **Two Qualtrics exports** from before class: the Supervisor survey and the Subordinate survey (initial offer, target, reservation). Pass both with `--csv`; the script tells them apart.
+- **The in-class Google Form**, which she downloads from the Google Sheet as a CSV (File → Download → .csv). Pass it with `--form`.
+
+The matches come from her roster's `SL` tab (the final table if absences are in, otherwise the draft).
+
+```bash
+python scripts/brs.py prepare --simulation SL --roster "<roster>" --csv "<Supervisor export>.csv" --csv "<Subordinate export>.csv" --form "<Form responses>.csv"
+python scripts/brs.py build   --simulation SL --roster "<roster>" --csv "<Supervisor export>.csv" --csv "<Subordinate export>.csv" --form "<Form responses>.csv" --week 3
+```
+
+She's in front of the class, so keep it quick: `prepare`, then `build` straight away unless something is `unresolved`, then one short message.
+
+What to tell her:
+- **Where the sheet is.** It's saved next to the Form CSV as `<course and term> Week <N> - Salary Negotiation Outcomes.xlsx`.
+- **Matches without a Form row** (`form.matches_without_a_row`): no one in that match submitted the Form.
+- **The Form notes:** a match number typed wrong and placed by the names, or a pair that submitted twice (the latest is used).
+- **Cells to look at:** `form.cleaning.mismatch` (a total that isn't base + raise), out-of-range numbers, and unclear answers.
+- **Students without a survey response** (`no_response`).
+- **The assumptions** (`assumptions`), in one line: every amount is shown as a total salary, and a number under $40,000 is read as a raise on a $60,000 base. Both are still being confirmed with her.
+
+Unresolved items:
+- **`form_row`:** a Form row whose match number and names don't point to one match. Ask which match it belongs to, then pass `--form-match "ROW=MATCH"` (or `--form-skip ROW` to leave it out). ROW is the row number in the CSV.
+- **Survey items:** the same as step 3 above.
+
+`missing` works the same way for Salary (pass both exports) to list who hasn't done either survey.
+
 ## The survey's name dropdown
 
 Students can pick their name from a dropdown in the survey instead of typing it, which makes matching exact. When she sets up a survey with that question, make the list to paste into Qualtrics:
@@ -111,6 +140,7 @@ Explain the `message` plainly and say exactly which file is affected.
 | `unresolved_responses` | Go back to step 3 with the listed items. |
 | `in_class_entries_present` | See step 5. |
 | `names_list_exists`, `names_list_missing` | See "The survey's name dropdown" above. |
+| `export_missing` | Salary needs both Qualtrics exports (Supervisor and Subordinate). Ask her for the missing one. |
 | `course_unknown` | Ask her for the course and term (for example "BUS 4489 F26") and pass `--course`. |
 
 Each run is recorded in `Negotiation Log.xlsx` next to her roster workbook. If an error isn't listed here, report the message and stop; don't improvise around it.

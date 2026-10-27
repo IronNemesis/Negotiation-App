@@ -306,6 +306,106 @@ def test_dropdown_codes_without_the_name_list_stop():
     assert not result["ok"] and result["error"] == "names_list_missing" and "survey names.txt" in result["message"]
 
 
+SL_ROSTER = "BUS 4489 F26 Roster - Salary in class.xlsx"
+SL_SUP = "BUS+4489+F26+Week+3+-+Salary+Bargaining+Range+SUPERVISOR_October+20,+2026_16.01.csv"
+SL_SUB = "BUS+4489+F26+Week+3+-+Salary+Bargaining+Range+SUBORDINATE_October+20,+2026_16.01.csv"
+SL_FORM = "BUS 4489 F26 Salary Negotiation (Responses) - Form Responses 1.csv"
+SL_SHEET = "BUS 4489 F26 Week 3 - Salary Negotiation Outcomes.xlsx"
+SL_EXPECTED = json.loads((EXAMPLES / "expected" / "salary.json").read_text(encoding="utf-8"))
+
+
+def salary_workspace() -> Path:
+    tmp = Path(tempfile.mkdtemp())
+    for f in (SL_ROSTER, SL_SUP, SL_SUB, SL_FORM):
+        shutil.copy(EXAMPLES / f, tmp / f)
+    return tmp
+
+
+def salary(folder: Path, command: str, *extra) -> dict:
+    week = ["--week", "3"] if command == "build" else []
+    return run(folder, command, "--simulation", "SL", "--roster", SL_ROSTER, "--csv", SL_SUP, "--csv", SL_SUB,
+               "--form", SL_FORM, *week, *extra)
+
+
+def test_salary_sheet_from_the_surveys_and_the_form():
+    folder = salary_workspace()
+    result = salary(folder, "build")
+    assert result["ok"], result
+    assert result["matches_from"] == "final table" and result["matches"] == 18 and result["students"] == 38
+    assert result["no_response"] == ["Fitzgerald, Nora", "Underwood, Mia"]
+    assert result["absent"] == ["Chen, Priya"] and result["absent_with_response"] == ["Chen, Priya"]
+    assert result["assumptions"] == {"base_salary": 60000, "a_number_below_this_is_a_raise": 40000}
+    assert result["form"]["matches_without_a_row"] == [12]
+    assert any("'66000'" in n and "match 1" in n for n in result["form"]["notes"])
+    assert any("'7 + Siobhan O'Neill'" in n for n in result["form"]["notes"])
+    wb = load_workbook(folder / SL_SHEET)
+    assert wb.sheetnames == ["Week 3 Salary Negotiation", "Roles", "Supervisor survey", "Subordinate survey", "Form"]
+    ws = wb.worksheets[0]
+    header = [c.value for c in ws[1]]
+    assert header[:16] == ["MATCH", "SUPERVISOR FIRST NAME", "SUPERVISOR LAST NAME", "ACTUAL INITIAL OFFER",
+                           "INITIAL OFFER", "TARGET", "RESERVATION", "BASE", "RAISE", "TOTAL", "RESERVATION", "TARGET",
+                           "INITIAL OFFER", "ACTUAL INITIAL OFFER", "SUBORDINATE FIRST NAME", "SUBORDINATE LAST NAME"]
+    yellow = [i + 1 for i in range(len(header)) if fill_of(ws.cell(1, i + 1)) == YELLOW]
+    assert yellow == [1, 2, 3, 4, 8, 9, 10, 14, 15, 16, 17, 18, 19, 20, 21]   # the in-class Form columns
+    rows = {}
+    for r in range(2, ws.max_row + 1):
+        for first, last in ((2, 3), (15, 16)):
+            if ws.cell(r, first).value:
+                rows[f"{ws.cell(r, last).value}, {ws.cell(r, first).value}"] = r
+    sup = {"INITIAL": 5, "TARGET": 6, "RESERVATION": 7}
+    sub = {"INITIAL": 13, "TARGET": 12, "RESERVATION": 11}
+    for role, cols in (("SUPERVISOR", sup), ("SUBORDINATE", sub)):
+        for name, spec in SL_EXPECTED["surveys"][role].items():
+            for question, (kind, value) in spec.get("expect", {}).items():
+                cell = ws.cell(rows[name], cols[question])
+                assert cell.value == value, (name, question, cell.value)
+                want = {"corrected": ORANGE, "unclear": LIGHT_RED}.get(kind)
+                assert fill_of(cell) == want or (want is None and fill_of(cell) in (None, "E2EFDA")), (name, kind)
+                if kind != "total":
+                    assert cell.comment, (name, question)
+                if isinstance(value, int):
+                    assert cell.number_format == '"$"#,##0'
+    match_row = {ws.cell(r, 1).value: r for r in range(2, ws.max_row + 1) if ws.cell(r, 1).value}
+    assert ws.cell(match_row[3], 10).value == 6550 and fill_of(ws.cell(match_row[3], 10)) == LIGHT_RED
+    assert "65,500" in ws.cell(match_row[3], 10).comment.text
+    assert ws.cell(match_row[5], 9).value == "No Deal" and ws.cell(match_row[5], 10).value == "No Deal"
+    assert ws.cell(match_row[9], 18).value == 35 and fill_of(ws.cell(match_row[9], 18)) == ORANGE
+    assert ws.cell(match_row[10], 4).value == "None" and fill_of(ws.cell(match_row[10], 4)) == LIGHT_RED
+    assert ws.cell(match_row[11], 4).value == 63000   # typed 3,000 as a raise
+    assert ws.cell(match_row[1], 21).value == "same as my partner's"   # the later of two rows
+    assert "No Form response" in ws.cell(match_row[12], 1).comment.text
+    assert rows["O'Neill, Siobhan"] == match_row[7] + 1 and ws.cell(rows["O'Neill, Siobhan"], 1).value is None
+    assert ws.cell(match_row["Absent"], 2).value == "Priya" and ws.cell(match_row["Absent"], 5).value == 61000
+    assert ws.cell(rows["Fitzgerald, Nora"], 2).comment.text.startswith("No survey response")
+
+
+def test_salary_asks_about_a_form_row_it_cant_place():
+    folder = salary_workspace()
+    path = folder / SL_FORM
+    lines = path.read_text(encoding="utf-8").splitlines()
+    lines[5] = lines[5].split(",", 1)[0] + ",99,Sam,Someone,Alex,Nobody" + "," + ",".join(lines[5].split(",")[6:])
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    result = salary(folder, "prepare")
+    assert result["ok"] and not result["ready_to_build"]
+    stuck = [u for u in result["unresolved"] if u["type"] == "form_row"]
+    assert [u["form_row"] for u in stuck] == [6] and stuck[0]["typed_match"] == "99"
+    refused = salary(folder, "build")
+    assert not refused["ok"] and refused["error"] == "unresolved_responses"
+    placed = salary(folder, "build", "--form-match", "6=4")
+    assert placed["ok"], placed
+    assert any("Form row 6 put on match 4" in n for n in placed["form"]["notes"])
+
+
+def test_salary_needs_one_export_per_role():
+    folder = salary_workspace()
+    result = run(folder, "prepare", "--simulation", "SL", "--roster", SL_ROSTER, "--csv", SL_SUP, "--csv", SL_SUP)
+    assert not result["ok"] and result["error"] == "bad_option"
+    one = run(folder, "build", "--simulation", "SL", "--roster", SL_ROSTER, "--csv", SL_SUP, "--week", "3")
+    assert not one["ok"] and one["error"] == "export_missing"
+    missing = run(folder, "missing", "--simulation", "SL", "--roster", SL_ROSTER, "--csv", SL_SUP, "--csv", SL_SUB)
+    assert missing["ok"] and missing["missing"] == ["Fitzgerald, Nora", "Underwood, Mia"]
+
+
 def test_existing_in_class_entries_are_protected():
     folder = workspace()
     assert build(folder, DRAFTED)["ok"]

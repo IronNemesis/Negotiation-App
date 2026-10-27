@@ -63,3 +63,39 @@ MATCH | FIRST LAST ROLE ACTUAL IO INITIAL TARGET RESERVATION BATNA items×6 | OU
 The main tab is named `Week <N> <Simulation>` (for example `Week 2 Used Car`). Other tabs: `Roles` (`MATCH | BUYER | SELLER`) and `Raw` (the export exactly as downloaded).
 
 The file is written to a temporary location, every value is read back and compared, and only then is it copied next to the export. An existing sheet is moved to `Backups` first, unless it has entries in ACTUAL IO or OUTCOME; then the script stops and asks.
+
+## The Salary Negotiation Outcomes Sheet
+
+**Inputs.**
+- **Two Qualtrics exports, one per role**, told apart by their questions.
+  - Supervisor: `Q1` first name, `Q2` last name, `Q12` initial offer, `Q13` target, `Q14` reservation, `Q17` email.
+  - Subordinate: `Q1`, `Q2`, `Q4` initial offer, `Q5` target, `Q6` reservation, `Q17` email.
+- **The in-class Google Form CSV**, one row per match typed by a student. Its columns are found by the start of their headers (`MATCH`, `SUPERVISOR FIRST NAME`, `BASE`, `RAISE`, `TOTAL`, …; see `scripts/simulations.json`).
+
+**Money as total salary.** Every money value is shown as a total salary, formatted `$72,000`:
+- A planned amount or an actual initial offer under `raise_below` ($40,000) is a raise, so `base_salary` ($60,000) is added. The comment shows what was typed. It isn't highlighted, since it isn't a correction.
+- `BASE` and `TOTAL` are always totals; `RAISE` is the raise as typed.
+- Typos and notes are cleaned as for Used Car (orange), and unclear answers are kept as typed (light red).
+- A total outside $40,000–$150,000 is light red, and so is a `TOTAL` that doesn't equal `BASE` + `RAISE`.
+- `No Deal` is kept as typed, without a highlight.
+- A minutes answer like `35 minutes` becomes 35 (orange).
+
+**Duplicates.** The latest Qualtrics response per student is used (`latest_duplicates`), and so is the latest Form row per match.
+
+**Placing a Form row on a match.**
+1. The typed names are checked against the matches: supervisor names against Supervisors, subordinate names against Subordinates. `A and B` counts as two people.
+2. If the names point to exactly one match, that match is used, even when the typed match number is wrong (`66000`). The summary says so.
+3. Otherwise the number is used (`7 + Siobhan O'Neill` reads as 19), as long as no name points elsewhere.
+4. If neither works, the row is unresolved: `--form-match ROW=MATCH` or `--form-skip ROW`.
+
+**Layout** (her template, one row per match):
+
+```
+MATCH | SUP FIRST LAST | ACTUAL INITIAL OFFER* | INITIAL OFFER  TARGET  RESERVATION | BASE* RAISE* TOTAL* | RESERVATION  TARGET  INITIAL OFFER | ACTUAL INITIAL OFFER* | SUB FIRST LAST | threat* minutes* approaches* terms*
+                                                 ── Supervisor survey ─────────                          ── Subordinate survey ─────────
+```
+
+`*` and the MATCH and name headers are yellow: they come from the in-class Form. The white columns come from the Qualtrics surveys. The Form's own TARGET answers are not shown; they stay on the `Form` tab.
+- Three-person matches, the absent block, alternate shading, and the legend work as on the Used Car sheet.
+- A match with no Form row gets a comment on its match number.
+- Tabs: the sheet, `Roles`, `Supervisor survey`, `Subordinate survey`, and `Form` (the exports untouched).

@@ -1,17 +1,103 @@
 {
   "UC": {
     "name": "Used Car",
-    "roles": ["BUYER", "SELLER"],
-    "role_codes": {"BUYER": 1, "SELLER": 2},
+    "roles": [
+      "BUYER",
+      "SELLER"
+    ],
+    "role_codes": {
+      "BUYER": 1,
+      "SELLER": 2
+    },
     "survey": {
       "first_name": "Q1",
       "last_name": "Q2",
       "role": "Q3",
       "email": "Q11",
       "name_choice": null,
-      "prices": {"INITIAL": "Q4", "TARGET": "Q5", "RESERVATION": "Q6", "BATNA": "Q7"},
-      "items": ["Q12_1", "Q12_2", "Q12_3", "Q12_4", "Q12_5", "Q12_6"]
+      "prices": {
+        "INITIAL": "Q4",
+        "TARGET": "Q5",
+        "RESERVATION": "Q6",
+        "BATNA": "Q7"
+      },
+      "items": [
+        "Q12_1",
+        "Q12_2",
+        "Q12_3",
+        "Q12_4",
+        "Q12_5",
+        "Q12_6"
+      ]
     },
-    "price_range": [1000, 50000]
+    "price_range": [
+      1000,
+      50000
+    ],
+    "file_title": "Used Car Bargaining Range"
+  },
+  "SL": {
+    "name": "Salary Negotiation",
+    "file_title": "Salary Negotiation Outcomes",
+    "layout": "salary",
+    "roles": [
+      "SUPERVISOR",
+      "SUBORDINATE"
+    ],
+    "role_codes": {
+      "SUPERVISOR": 1,
+      "SUBORDINATE": 2
+    },
+    "latest_duplicates": true,
+    "base_salary": 60000,
+    "raise_below": 40000,
+    "salary_range": [
+      40000,
+      150000
+    ],
+    "surveys": {
+      "SUPERVISOR": {
+        "detect": "raise will you suggest to your subordinate",
+        "first_name": "Q1",
+        "last_name": "Q2",
+        "email": "Q17",
+        "prices": {
+          "INITIAL": "Q12",
+          "TARGET": "Q13",
+          "RESERVATION": "Q14"
+        }
+      },
+      "SUBORDINATE": {
+        "detect": "raise will you suggest to your boss",
+        "first_name": "Q1",
+        "last_name": "Q2",
+        "email": "Q17",
+        "prices": {
+          "INITIAL": "Q4",
+          "TARGET": "Q5",
+          "RESERVATION": "Q6"
+        }
+      }
+    },
+    "form": {
+      "timestamp": "Timestamp",
+      "match": "MATCH",
+      "sup_first": "SUPERVISOR FIRST NAME",
+      "sup_last": "SUPERVISOR LAST NAME",
+      "sub_first": "SUBORDINATE FIRST NAME",
+      "sub_last": "SUBORDINATE LAST NAME",
+      "sup_initial": "SUPERVISOR INITIAL OFFER",
+      "sup_target": "SUPERVISOR TARGET",
+      "base": "BASE",
+      "raise": "RAISE",
+      "total": "TOTAL",
+      "sub_target": "SUBORDINATE TARGET",
+      "sub_initial": "SUBORDINATE INITIAL OFFER",
+      "threat": "Did the SUBORDINATE make a credible threat",
+      "minutes": "How many minutes",
+      "sup_approach": "To what extent was THE SUPERVISOR'S approach",
+      "sub_approach": "To what extent was THE SUBORDINATE'S approach",
+      "terms": "Any other terms"
+    }
   }
 }

@@ -86,6 +86,12 @@ When a student is absent, they get `_0`, and their partner joins the **match jus
 
 If the match just before would create a repeat partner (possible in later simulations), the skill warns and asks the instructor where the student should go.
 
+## The Salary Negotiation Files
+
+- **Before class**, each student takes a Qualtrics survey for their role. There is one survey (and one export) for Supervisors and one for Subordinates, each asking for an initial offer, target and reservation as a raise. Students answer in raises or totals, with notes ("0 (they already got $3500…)").
+- **In class**, after negotiating, one student per pair fills in a Google Form. It asks for the match number, both names, both actual initial offers, base, raise and total, the walk-away threat, minutes, each side's approach, and other terms. The responses collect in a Google Sheet, which she downloads as a CSV. Students type freely: match numbers like `66000` or `7 + Siobhan O'Neill`, both partners submitting, names swapped or lowercase, `No Deal`, `$756,500`.
+- **Her outcomes sheet** (`BUS 489 S25 Salary Negotiation Outcomes Template.xlsx`) has one row per match: Supervisor left, BASE / RAISE / TOTAL in the middle, Subordinate mirrored right, then the Form's other answers. Yellow headers mark the in-class Form columns; white, the Qualtrics columns. Each side has both a planned INITIAL OFFER (Qualtrics) and an ACTUAL INITIAL OFFER (the Form). She wants every amount shown as a total salary, with `$` and commas (Meeting 4). **(Assumptions: a $60,000 base; under $40,000 is a raise; Qualtrics targets win over the Form's.)**
+
 ## The Qualtrics Export (Used Car)
 
 The instructor downloads a CSV with three header rows: column codes (`Q1`, `Q2`, …), question text, and `ImportId` JSON. Answers are exported as numeric codes (Role `1` = Buyer, `2` = Seller; perception items `1`–`4`).
