@@ -34,6 +34,7 @@ All pairing records live in the Instructor's roster workbook, one tab per simula
 - **T7: Match Survey Responses to Students** connects each response to a student in the current matches.
 - **H4: Resolve Survey Matches** handles any response that cannot be matched with confidence.
 - **T8: Build Bargaining Range Sheet** writes her mirrored, one-row-per-match layout, with absent students in a block at the bottom after the absence update.
+- **T11: Build Salary Outcomes Sheet** (Salary only, in class after the negotiation) combines the two Salary Qualtrics exports with the in-class Google Form CSV into her outcomes sheet, every amount as a total salary.
 - **T10: List Survey Non-Respondents** (any time the survey is open) lists the students in the current matches with no response, with a BCC list, so she can email them a reminder.
 
 **Stage 3 (Absences).**
@@ -107,6 +108,7 @@ flowchart TD
 | T8 | [Build Bargaining Range Sheet](task-specs/build-bargaining-range-sheet.md) | Act | Agent | bargaining sheet |
 | T9 | [Apply Absences and Write Final Matches](task-specs/apply-absences-and-write-final-matches.md) | Remember | Agent | pairing |
 | T10 | [List Survey Non-Respondents](task-specs/list-survey-non-respondents.md) | Retrieve | Agent | bargaining sheet |
+| T11 | [Build Salary Outcomes Sheet](task-specs/build-salary-outcomes-sheet.md) | Act | Agent | bargaining sheet |
 | H1 | [Resolve Workbook or Survey Data Issue](task-specs/resolve-workbook-or-survey-data-issue.md) | Verify | Instructor | both |
 | H2 | [Review Draft Matches](task-specs/review-draft-matches.md) | Verify | Instructor | pairing |
 | H3 | [Send Role Emails](task-specs/send-role-emails.md) | Act | Instructor | pairing |

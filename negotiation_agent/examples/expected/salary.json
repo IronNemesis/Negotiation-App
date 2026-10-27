@@ -1,0 +1,390 @@
+{
+  "final": [
+    {
+      "match": 1,
+      "SUPERVISOR": [
+        "Adebayo, Tolu"
+      ],
+      "SUBORDINATE": [
+        "Zimmerman, Tess"
+      ]
+    },
+    {
+      "match": 2,
+      "SUPERVISOR": [
+        "Alvarez, Maya"
+      ],
+      "SUBORDINATE": [
+        "Mendes, Rafael"
+      ]
+    },
+    {
+      "match": 3,
+      "SUPERVISOR": [
+        "Bennett, Owen"
+      ],
+      "SUBORDINATE": [
+        "Nakamura, Ren"
+      ]
+    },
+    {
+      "match": 4,
+      "SUPERVISOR": [
+        "Brooks, Tyler"
+      ],
+      "SUBORDINATE": [
+        "Nguyen, Katherine"
+      ]
+    },
+    {
+      "match": 5,
+      "SUPERVISOR": [
+        "Castellano, Rosa"
+      ],
+      "SUBORDINATE": [
+        "Novak, Ben"
+      ]
+    },
+    {
+      "match": 7,
+      "SUPERVISOR": [
+        "Dawson, Leah"
+      ],
+      "SUBORDINATE": [
+        "Ortiz, Lena",
+        "O'Neill, Siobhan"
+      ]
+    },
+    {
+      "match": 8,
+      "SUPERVISOR": [
+        "Delgado, Marco"
+      ],
+      "SUBORDINATE": [
+        "Park, Daniel"
+      ]
+    },
+    {
+      "match": 9,
+      "SUPERVISOR": [
+        "Evans, Jordan"
+      ],
+      "SUBORDINATE": [
+        "Park, Danielle"
+      ]
+    },
+    {
+      "match": 10,
+      "SUPERVISOR": [
+        "Fitzgerald, Nora"
+      ],
+      "SUBORDINATE": [
+        "Quinn, Ava"
+      ]
+    },
+    {
+      "match": 11,
+      "SUPERVISOR": [
+        "García, Mateo"
+      ],
+      "SUBORDINATE": [
+        "Reyes, Noor"
+      ]
+    },
+    {
+      "match": 12,
+      "SUPERVISOR": [
+        "Hale, Simone"
+      ],
+      "SUBORDINATE": [
+        "Rossi, Gianna"
+      ]
+    },
+    {
+      "match": 13,
+      "SUPERVISOR": [
+        "Hoang, Minh"
+      ],
+      "SUBORDINATE": [
+        "Sato, Hiro"
+      ]
+    },
+    {
+      "match": 14,
+      "SUPERVISOR": [
+        "Ibarra, Lucia"
+      ],
+      "SUBORDINATE": [
+        "Shah, Dev"
+      ]
+    },
+    {
+      "match": 15,
+      "SUPERVISOR": [
+        "Jensen, Kai"
+      ],
+      "SUBORDINATE": [
+        "Silva, Kai"
+      ]
+    },
+    {
+      "match": 16,
+      "SUPERVISOR": [
+        "Kowalski, Andy"
+      ],
+      "SUBORDINATE": [
+        "Thornton, Jack"
+      ]
+    },
+    {
+      "match": 17,
+      "SUPERVISOR": [
+        "Laurent, Camille"
+      ],
+      "SUBORDINATE": [
+        "Underwood, Mia"
+      ]
+    },
+    {
+      "match": 18,
+      "SUPERVISOR": [
+        "Lindqvist, Erik"
+      ],
+      "SUBORDINATE": [
+        "Van der Berg, Elise",
+        "Yilmaz, Deniz"
+      ]
+    },
+    {
+      "match": 19,
+      "SUPERVISOR": [
+        "Mahoney, Grace"
+      ],
+      "SUBORDINATE": [
+        "Walsh, Connor"
+      ]
+    }
+  ],
+  "absent": [
+    "Chen, Priya"
+  ],
+  "surveys": {
+    "SUPERVISOR": {
+      "Adebayo, Tolu": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Alvarez, Maya": {
+        "expect": {
+          "INITIAL": [
+            "corrected",
+            60000
+          ],
+          "TARGET": [
+            "raise",
+            62500
+          ]
+        },
+        "duplicate": false
+      },
+      "Bennett, Owen": {
+        "expect": {
+          "INITIAL": [
+            "total",
+            63500
+          ]
+        },
+        "duplicate": false
+      },
+      "Brooks, Tyler": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Castellano, Rosa": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Chen, Priya": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Dawson, Leah": {
+        "expect": {
+          "TARGET": [
+            "unclear",
+            "$5000-$6000"
+          ]
+        },
+        "duplicate": false
+      },
+      "Delgado, Marco": {
+        "expect": {
+          "INITIAL": [
+            "unclear",
+            "NA"
+          ]
+        },
+        "duplicate": false
+      },
+      "Evans, Jordan": {
+        "expect": {
+          "INITIAL": [
+            "raise",
+            61000
+          ]
+        },
+        "duplicate": true
+      },
+      "Fitzgerald, Nora": {
+        "response": "none"
+      },
+      "García, Mateo": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Hale, Simone": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Hoang, Minh": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Ibarra, Lucia": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Jensen, Kai": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Kowalski, Andy": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Laurent, Camille": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Lindqvist, Erik": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Mahoney, Grace": {
+        "expect": {},
+        "duplicate": false
+      }
+    },
+    "SUBORDINATE": {
+      "Mendes, Rafael": {
+        "expect": {
+          "INITIAL": [
+            "raise",
+            77500
+          ]
+        },
+        "duplicate": false
+      },
+      "Nakamura, Ren": {
+        "expect": {
+          "RESERVATION": [
+            "total",
+            70000
+          ]
+        },
+        "duplicate": false
+      },
+      "Nguyen, Katherine": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Novak, Ben": {
+        "expect": {},
+        "duplicate": false
+      },
+      "O'Neill, Siobhan": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Ortiz, Lena": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Park, Daniel": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Park, Danielle": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Quinn, Ava": {
+        "expect": {
+          "INITIAL": [
+            "unclear",
+            "75,000 salary"
+          ]
+        },
+        "duplicate": false
+      },
+      "Reyes, Noor": {
+        "expect": {
+          "RESERVATION": [
+            "corrected",
+            67000
+          ]
+        },
+        "duplicate": false
+      },
+      "Rossi, Gianna": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Sato, Hiro": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Shah, Dev": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Silva, Kai": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Thornton, Jack": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Underwood, Mia": {
+        "response": "none"
+      },
+      "Van der Berg, Elise": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Walsh, Connor": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Yilmaz, Deniz": {
+        "expect": {},
+        "duplicate": false
+      },
+      "Zimmerman, Tess": {
+        "expect": {},
+        "duplicate": false
+      }
+    }
+  },
+  "form": {
+    "1": "submitted twice; the later row has 66000 as the match number",
+    "3": "total typo: base + raise is $65,500",
+    "5": "no deal",
+    "7": "three-person match typed into the match number",
+    "9": "minutes typed with a word",
+    "10": "no supervisor initial offer",
+    "11": "supervisor initial offer typed as a raise",
+    "12": "no form row"
+  }
+}

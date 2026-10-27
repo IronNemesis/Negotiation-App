@@ -18,6 +18,10 @@ python negotiation_agent/examples/tools/make_examples.py
 | `BUS+4489+F26+Week+2+-+Used+Car+Bargaining+Range_October+14,+2026_14.40.csv` | A Qualtrics export in her survey's exact format (three header rows, numeric codes) | Cleaning (T6), matching (T7), and the bargaining range sheet (T8) |
 | `expected/used-car.json` | The draft, absences, final matches, and per-student survey expectations | Automated checks of both skills |
 | `tools/make_examples.py` | The generator for all of the above | |
+| `BUS 4489 F26 Roster - Salary in class.xlsx` | After Used Car, with `SL` drafted by her rotation and the final matches after one absence (Priya Chen); Siobhan O'Neill was placed in match 7 by hand, since the match before would repeat her Used Car partner | The Salary outcomes sheet (T11) |
+| `BUS+4489+F26+Week+3+-+Salary+Bargaining+Range+SUPERVISOR_….csv`, `…SUBORDINATE_….csv` | The two Salary Qualtrics exports in her exact format, answered as raises or totals, with notes, a range, `NA`, a typo (`7`), a nickname, a duplicate, and two students with no response | T11 cleaning and matching |
+| `BUS 4489 F26 Salary Negotiation (Responses) - Form Responses 1.csv` | The in-class Google Form export: a pair that submitted twice (one with `66000` as the match number), a total typo (`6550`), `No Deal`, a three-person match typed as `7 + Siobhan O'Neill`, `35 minutes`, `None`, a raise typed where a total was asked, and one match with no row | T11 Form matching and cleaning |
+| `expected/salary.json`, `tools/make_salary_examples.py` | The planted Salary cases, and their generator (run after `make_examples.py`; it uses the pairing skill itself to make the `SL` tab) | |
 
 ## Planted Cases
 

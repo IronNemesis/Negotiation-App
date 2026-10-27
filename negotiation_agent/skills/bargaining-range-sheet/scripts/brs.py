@@ -7,6 +7,8 @@ Commands (task IDs refer to negotiation_agent/agent/task-specs):
   names             the class list as "Last, First", one per line, for the survey's name dropdown; writes a text file
 
 Each prints one JSON object. "ok": false comes with an "error" code and a plain-language "message".
+The Salary negotiation (--simulation SL) has its own sheet, built by salary.py: two Qualtrics exports (--csv twice)
+and the in-class Google Form (--form).
 Decisions from the instructor (H4) are passed to every command with --assign, --use, --leave-out,
 and --latest-duplicates.
 """
@@ -138,7 +140,7 @@ def read_export(path: Path, sim: dict, roster: Path, code: str,
     # With a name dropdown, she may drop the typed-name questions from the survey.
     optional = (lambda code: codes.index(code) if code in codes else None) if c_choice is not None else col
     c_first, c_last, c_email = optional(s["first_name"]), optional(s["last_name"]), optional(s["email"])
-    c_role = col(s["role"])
+    c_role = col(s["role"]) if s.get("role") else None   # Salary: one export per role, so no role question
     choices = read_names_file(names_file(roster, code)) if c_choice is not None else None
     if c_choice is not None and choices is None and any(
             ns.clean(r[c_choice]).isdigit() for r in rows[1 + skip:] if len(r) > c_choice):
@@ -148,7 +150,7 @@ def read_export(path: Path, sim: dict, roster: Path, code: str,
                             "workbook. Put that file back, or download the export again with 'Use choice text' for "
                             "the name question only.")
     c_prices = {name: col(code) for name, code in s["prices"].items()}
-    c_items = [col(code) for code in s["items"]]
+    c_items = [col(code) for code in s.get("items", [])]
     c_status = codes.index("Status") if "Status" in codes else None
     c_rid = codes.index("ResponseId") if "ResponseId" in codes else None
     c_time = codes.index("RecordedDate") if "RecordedDate" in codes else None
@@ -176,7 +178,7 @@ def read_export(path: Path, sim: dict, roster: Path, code: str,
             first, last = ns.split_class_name(chosen)
         responses.append(Response(
             rid=rid, time=row[c_time] if c_time is not None else "", first=first, last=last,
-            email=get(c_email).lower(), role_code=get(c_role),
+            email=get(c_email).lower(), role_code=get(c_role) or s.get("role_code", ""),
             prices={name: clean_price(row[c], low, high) for name, c in c_prices.items()}, items=items,
             chosen=chosen, chosen_problem=problem))
     return rows, item_headers, responses, removed, (codes[c_choice] if c_choice is not None else None)
@@ -317,7 +319,7 @@ def match_responses(responses, groups, absent, students, args):
         if len(chosen) == 1:
             p.response = chosen[0]
             decisions.append(f"{name}: used response {chosen[0].rid} of {len(rs)} submissions")
-        elif args.latest_duplicates:
+        elif args.latest_duplicates or SETTINGS_SIM.get("latest_duplicates"):
             p.response = rs[-1]
             decisions.append(f"{name}: used the latest of {len(rs)} submissions")
         else:
@@ -348,7 +350,7 @@ def summarize(stage, groups, absent, removed, responses, decisions, unresolved, 
     for r in responses:
         who = owner.get(r.rid, f"{r.first} {r.last} (unmatched)")
         for q, a in r.prices.items():
-            if a.flag:
+            if a.flag in cleaning:   # Salary adds a "raise" flag, summarized by salary.py
                 item = {"student": who, "question": q, "typed": a.typed}
                 if a.flag == "corrected":
                     item["now"] = a.value
@@ -589,7 +591,13 @@ def run(args, mode: str):
     sim = SETTINGS[args.simulation]
     SETTINGS_SIM.clear()
     SETTINGS_SIM.update(sim)
-    roster, export = Path(args.roster).expanduser().resolve(), Path(args.csv).expanduser().resolve()
+    if sim.get("layout") == "salary":
+        import salary
+        salary.run(args, mode, sim)
+        return
+    if len(args.csv) != 1:
+        raise ns.SkillError("bad_option", f"{sim['name']} uses one Qualtrics export; pass --csv once.")
+    roster, export = Path(args.roster).expanduser().resolve(), Path(args.csv[0]).expanduser().resolve()
     raw_rows, item_headers, responses, removed, name_col = read_export(export, sim, roster, args.simulation,
                                                                        args.name_column)
     students, stage, groups, absent, warnings = load_matches(roster, args.simulation, sim)
@@ -616,7 +624,7 @@ def run(args, mode: str):
     if not course:
         raise ns.SkillError("course_unknown", "Could not tell the course and term from the roster file name. "
                                               "Pass --course, e.g. 'BUS 4489 F26'.")
-    out = export.parent / f"{course} Week {args.week} - {sim['name']} Bargaining Range.xlsx"
+    out = export.parent / f"{course} Week {args.week} - {sim['file_title']}.xlsx"
     previous = None
     if out.exists():
         filled = existing_in_class_entries(out)
@@ -665,7 +673,12 @@ def main():
     for name in ("prepare", "build", "missing"):
         sp = sub.add_parser(name)
         sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
-        sp.add_argument("--csv", required=True, help="The Qualtrics export (.csv)")
+        sp.add_argument("--csv", required=True, action="append",
+                        help="The Qualtrics export (.csv); for Salary, pass both (Supervisor and Subordinate)")
+        sp.add_argument("--form", help="Salary: the in-class Google Form responses, downloaded as .csv")
+        sp.add_argument("--form-match", action="append", default=[],
+                        help="Salary: 'ROW=MATCH' to put a Form row (its row number in the CSV) on a match")
+        sp.add_argument("--form-skip", action="append", default=[], help="Salary: a Form row number to leave out")
         sp.add_argument("--simulation", default="UC", help="Simulation code (default UC)")
         sp.add_argument("--name-column", help="Question code of the name dropdown, if it isn't found on its own")
         sp.add_argument("--assign", action="append", default=[], help="RESPONSE_ID=Last, First (her decision)")
