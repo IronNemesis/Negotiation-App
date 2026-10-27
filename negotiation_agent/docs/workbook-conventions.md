@@ -10,7 +10,7 @@ One Excel workbook per course and term (for example `BUS 4489 F26 Roster.xlsx`).
 
 | Tab | Contents | Used by |
 |---|---|---|
-| `Att - Fall` (or `Att - Spring`) | Class list and attendance: `No.`, `Student Name` (`Last, First`), `Email` (Cal Poly), then one column per class date | Both skills read the class list. Attendance is filled in by the instructor after class **(assumption)** and is not read yet. |
+| `Att - Fall` (or `Att - Spring`) | Class list and attendance: `No.`, `Student Name` (`Last, First`), `Email` (Cal Poly), `Gender` and `Consent` (from the Week 1 baseline survey, added by the skill; Meeting 4), then one column per class date | Both skills read the class list. Attendance is filled in by the instructor after class **(assumption)** and is not read yet. |
 | `UC`, `SL`, `ES`, `JO`, `VA`, … | One tab per simulation, named with the simulation's two-letter code | `negotiation-pairing` writes the current simulation's tab. Both skills read pairings from it. |
 | Exams, grades, other tabs | Not related to pairing | Never read or changed |
 

@@ -294,6 +294,85 @@ def test_salary_draft_keeps_the_sides_even_after_a_drop():
     assert not before["ok"] and before["error"] == "previous_draft_missing"
 
 
+BASELINE_CSV = "BUS+4489+F26+Week+1+-+Negotiation+Baseline+Survey_September+30,+2026_09.44.csv"
+BASELINE = json.loads((EXAMPLES / "expected" / "baseline.json").read_text(encoding="utf-8"))
+EVANS = "R_base0009=Evans, Jordan"   # "Jordan Evens" in the survey
+
+
+def baseline_workspace() -> Path:
+    folder = workspace()
+    shutil.copy(EXAMPLES / BASELINE_CSV, folder / BASELINE_CSV)
+    return folder
+
+
+def test_baseline_preview_reads_gender_and_consent():
+    folder = baseline_workspace()
+    result = run(folder, "baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV)
+    assert result["ok"] and result["students"] == 39 and result["responses"] == 38   # preview row left out
+    assert [u["typed_name"] for u in result["unresolved"]] == ["Jordan Evens"]
+    assert result["unresolved"][0]["suggestions"] == ["Evans, Jordan"]
+    result = run(folder, "baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    table = {row["student"]: [row["gender"], row["consent"]] for row in result["table"]}
+    assert table == BASELINE["students"]
+    assert result["declined"] == ["Bennett, Owen", "Ortiz, Lena"] and result["excluded"] == ["Hoang, Minh"]
+    assert result["no_survey"] == ["Underwood, Mia", "Walsh, Connor"]
+    assert result["duplicates"] == ["Sato, Hiro took the survey 2 times; the latest is used."]
+
+
+def test_write_baseline_adds_two_columns_after_email():
+    folder = baseline_workspace()
+    others = all_values(folder / DRAFTED, skip_tab="Att - Fall")
+    att_before = load_workbook(folder / DRAFTED)["Att - Fall"]
+    refused = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV)
+    assert not refused["ok"] and refused["error"] == "unresolved_responses"
+    result = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    assert result["ok"], result
+    assert Path(result["backup"]).exists() and "inserted after Email" in result["written_to"]
+    assert all_values(folder / DRAFTED, skip_tab="Att - Fall") == others, "a tab other than the class list changed"
+    att = load_workbook(folder / DRAFTED)["Att - Fall"]
+    assert [att.cell(2, c).value for c in range(1, 7)] == ["No.", "Student Name", "Email", "Gender", "Consent", "Goals"]
+    for r in range(1, att_before.max_row + 1):   # everything right of Email moved over by two
+        for c in range(1, att_before.max_column + 1):
+            assert att.cell(r, c if c <= 3 else c + 2).value == att_before.cell(r, c).value, (r, c)
+    rows = {att.cell(r, 2).value: r for r in range(3, att.max_row + 1)}
+    for name, (gender, consent) in BASELINE["students"].items():
+        assert [att.cell(rows[name], 4).value or "", att.cell(rows[name], 5).value] == [gender, consent], name
+    # The other skills still read the class list, and a second run changes nothing.
+    assert run(folder, "check", "--roster", DRAFTED)["ok"]
+    again = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    assert again["ok"] and "inserted" not in again["written_to"]
+    # A different answer for someone already filled in needs her OK.
+    changed = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV)
+    assert not changed["ok"] and changed["error"] == "unresolved_responses"
+    att2 = load_workbook(folder / DRAFTED)
+    att2["Att - Fall"].cell(rows["Alvarez, Maya"], 5).value = "No"
+    att2.save(folder / DRAFTED)
+    differs = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    assert not differs["ok"] and differs["error"] == "baseline_exists" and "Alvarez, Maya" in differs["changes"][0]
+
+
+def test_write_baseline_asks_her_to_insert_columns_when_the_tab_has_formulas():
+    folder = baseline_workspace()
+    wb = load_workbook(folder / DRAFTED)
+    att = wb["Att - Fall"]
+    att.cell(45, 9).value = '=COUNTIF(I3:I41,"x")'   # a total under the attendance column
+    wb.save(folder / DRAFTED)
+    result = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    assert not result["ok"] and result["error"] == "insert_columns_needed"
+    assert any("formulas" in r for r in result["reasons"])
+    # She inserts the two blank columns herself in Excel (simulated here, formula adjusted as Excel would).
+    wb = load_workbook(folder / DRAFTED)
+    att = wb["Att - Fall"]
+    att.insert_cols(4, 2)
+    att.cell(2, 4).value, att.cell(2, 5).value = "Gender", "Consent"
+    att.cell(45, 11).value = '=COUNTIF(K3:K41,"x")'
+    wb.save(folder / DRAFTED)
+    filled = run(folder, "write-baseline", "--roster", DRAFTED, "--csv", BASELINE_CSV, "--assign", EVANS)
+    assert filled["ok"] and "inserted" not in filled["written_to"], filled
+    att = load_workbook(folder / DRAFTED)["Att - Fall"]
+    assert att.cell(45, 11).value == '=COUNTIF(K3:K41,"x")' and att.cell(3, 5).value == "Yes"
+
+
 def test_roles_are_locked_after_emails_go_out():
     folder = workspace()
     assert run(folder, "roles-sent", "--roster", DRAFTED)["ok"]

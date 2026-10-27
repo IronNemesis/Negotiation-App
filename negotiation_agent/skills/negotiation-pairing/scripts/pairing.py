@@ -10,6 +10,8 @@ Commands (task IDs refer to negotiation_agent/agent/task-specs):
   absences     T9       propose the final matches for the absent students; writes nothing
   write-final  T9       write the confirmed final matches into the final table
   log                   record one of her decisions in the log
+  baseline              read the Week 1 baseline survey: each student's gender and consent; writes nothing
+  write-baseline        write Gender and Consent into two columns just after Email on the class list
 
 Every command prints one JSON object. "ok": false comes with an "error" code and a plain-language "message".
 Names are given as on her class list ("Last, First"); absences may be given however she said them.
@@ -17,7 +19,10 @@ Names are given as on her class list ("Last, First"); absences may be given howe
 from __future__ import annotations
 
 import argparse
+import csv
+from copy import copy
 import json
+import re
 import sys
 from dataclasses import dataclass
 from datetime import date
@@ -28,6 +33,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import nps_shared as ns  # noqa: E402
 from openpyxl import load_workbook  # noqa: E402
+from openpyxl.utils import get_column_letter  # noqa: E402
 
 SETTINGS = json.loads((HERE / "simulations.json").read_text(encoding="utf-8"))
 MAX_GROUP = 3
@@ -670,6 +676,240 @@ def cmd_log(args):
     ns.emit({"ok": True, **({"log_warning": warning} if warning else {})})
 
 
+# ---------------------------------------------------------------- baseline survey: gender and consent
+
+BASELINE = {"consent": "Q1", "first": "Q11", "last": "Q14", "gender": "Q15", "gender_other": "Q15_4_TEXT"}
+CONSENT = {"1": "Yes", "2": "No"}
+GENDER = {"1": "M", "2": "F"}
+NEW_COLUMNS = ["Gender", "Consent"]
+
+
+def read_baseline(path: Path) -> list[dict]:
+    """Responses from the Qualtrics baseline export (number codes): consent, names, gender."""
+    if not path.exists():
+        raise ns.SkillError("file_missing", f"Could not find the baseline survey export {path.name}.")
+    try:
+        with path.open(newline="", encoding="utf-8-sig") as f:
+            rows = list(csv.reader(f))
+    except PermissionError:
+        raise ns.SkillError("file_locked", f"{path.name} is open in Excel. Close it and try again.")
+    codes = [c.strip() for c in rows[0]] if rows else []
+    missing = [c for c in BASELINE.values() if c not in codes]
+    if missing:
+        raise ns.SkillError("survey_layout", f"The baseline export has no {', '.join(missing)} column. The survey "
+                                             "may have been edited.", {"columns": codes})
+    skip = 2 if len(rows) > 2 and rows[2] and rows[2][0].startswith('{"ImportId') else 0
+    col = {key: codes.index(code) for key, code in BASELINE.items()}
+    status = codes.index("Status") if "Status" in codes else None
+    rid = codes.index("ResponseId") if "ResponseId" in codes else None
+    when = codes.index("RecordedDate") if "RecordedDate" in codes else None
+    out = []
+    for n, row in enumerate(rows[1 + skip:], start=1):
+        row = row + [""] * (len(codes) - len(row))
+        if status is not None and ns.clean(row[status]) not in ("", "0", "IP Address"):
+            continue   # a survey preview or test
+        values = {key: ns.clean(row[c]) for key, c in col.items()}
+        if not (values["first"] or values["last"]):
+            continue
+        if not values["consent"].isdigit() and values["consent"]:   # exported as choice text
+            raise ns.SkillError("survey_layout", "This baseline export has answer text instead of number codes. "
+                                                 "Download it again from Qualtrics with 'Use numeric values'.")
+        out.append({"rid": row[rid] if rid is not None and row[rid] else f"row {n}",
+                    "time": row[when] if when is not None else "", **values})
+    return out
+
+
+def baseline_values(students: list[ns.Student], responses: list[dict], args) -> tuple[dict, dict]:
+    """{student key: (gender, consent)} and a report. A student who chose Other is excluded from the research;
+    one with no survey counts as declined (Meeting 4)."""
+    by_name = {s.name: s for s in students}
+    assigned = {}
+    for spec in args.assign:
+        rid, _, name = spec.partition("=")
+        if name.strip() not in by_name or rid.strip() not in {r["rid"] for r in responses}:
+            raise ns.SkillError("bad_decision", f"--assign {spec}: the response ID or the class-list name "
+                                                "('Last, First') was not found.")
+        assigned[rid.strip()] = by_name[name.strip()]
+    claims: dict[str, list[dict]] = {}
+    unresolved, decisions = [], []
+    for r in responses:
+        if r["rid"] in args.leave_out:
+            decisions.append(f"Left out response {r['rid']} ({r['first']} {r['last']})")
+            continue
+        if r["rid"] in assigned:
+            student = assigned[r["rid"]]
+            decisions.append(f"Response {r['rid']} ({r['first']} {r['last']}) is {student.name}")
+        else:
+            res = ns.resolve_student(r["first"], r["last"], students)
+            if not res.confident:
+                unresolved.append({"response": r["rid"], "typed_name": f"{r['first']} {r['last']}".strip(),
+                                   "reason": "the last name matches but the first name doesn't" if res.how == "likely"
+                                   else "more than one student could match" if len(res.candidates) > 1
+                                   else "close to a student's name, but not the same" if res.candidates
+                                   else "no student on the class list matches (dropped the class?)",
+                                   "suggestions": [c.name for c in (res.candidates or [res.student]) if c][:3]})
+                continue
+            student = res.student
+        claims.setdefault(student.key, []).append(r)
+    values, report = {}, {"declined": [], "excluded": [], "no_survey": [], "duplicates": []}
+    for s in students:
+        rs = sorted(claims.get(s.key, []), key=lambda r: r["time"])
+        if not rs:
+            values[s.key] = ("", "No (no survey)")
+            report["no_survey"].append(s.name)
+            continue
+        if len(rs) > 1:
+            report["duplicates"].append(f"{s.name} took the survey {len(rs)} times; the latest is used.")
+        r = rs[-1]
+        gender = GENDER.get(r["gender"], "Other" if r["gender"] else "")
+        consent = CONSENT.get(r["consent"], "No")
+        if gender == "Other":
+            consent = "Excluded"
+            report["excluded"].append(s.name)
+        elif consent == "No":
+            report["declined"].append(s.name)
+        values[s.key] = (gender, consent)
+    report["gender_blank"] = [s.name for s in students if values[s.key][0] == "" and s.name not in report["no_survey"]]
+    return values, {"unresolved": unresolved, "decisions": decisions, **report}
+
+
+def insert_blockers(wb, ws, after_col: int) -> list[str]:
+    """Things openpyxl would not move when columns are inserted, so inserting could break her tab."""
+    issues = []
+    if any(isinstance(c.value, str) and c.value.startswith("=") for row in ws.iter_rows() for c in row):
+        issues.append(f"'{ws.title}' has formulas")
+    if any(r.max_col > after_col for r in ws.merged_cells.ranges):
+        issues.append(f"'{ws.title}' has merged cells to the right of Email")
+    if len(ws.conditional_formatting):
+        issues.append(f"'{ws.title}' has conditional formatting")
+    if ws.data_validations.dataValidation:
+        issues.append(f"'{ws.title}' has drop-down lists or data validation")
+    if ws.tables:
+        issues.append(f"'{ws.title}' has an Excel table")
+    names = [ws.title, f"'{ws.title}'"]
+    for other in wb.worksheets:
+        if other is ws:
+            continue
+        if any(isinstance(c.value, str) and c.value.startswith("=") and any(n + "!" in c.value for n in names)
+               for row in other.iter_rows() for c in row):
+            issues.append(f"formulas on '{other.title}' refer to '{ws.title}'")
+    if any(ws.title in str(getattr(d, "attr_text", "") or getattr(d, "value", "")) for d in
+           (wb.defined_names.values() if hasattr(wb.defined_names, "values") else wb.defined_names.definedName)):
+        issues.append(f"named ranges refer to '{ws.title}'")
+    return issues
+
+
+def cmd_baseline(args, write: bool = False):
+    roster = Path(args.roster).expanduser().resolve()
+    wb = ns.open_workbook(roster)
+    tab, students, warnings = ns.read_class_list(wb)
+    responses = read_baseline(Path(args.csv).expanduser().resolve())
+    values, report = baseline_values(students, responses, args)
+    counts = {"M": 0, "F": 0, "Other": 0, "Yes": 0, "No": 0, "Excluded": 0, "No (no survey)": 0}
+    for gender, consent in values.values():
+        counts[gender] = counts.get(gender, 0) + 1
+        counts[consent] += 1
+    result = {"ok": True, "class_tab": tab, "students": len(students), "responses": len(responses),
+              "gender": {k: counts[k] for k in ("M", "F", "Other")},
+              "consent": {k: counts[k] for k in ("Yes", "No", "Excluded", "No (no survey)")},
+              **report, "class_list_warnings": warnings,
+              "table": [{"student": s.name, "gender": values[s.key][0], "consent": values[s.key][1]} for s in students]}
+    if not write:
+        ns.write_log(roster.parent, "Baseline survey preview",
+                     f"{len(responses)} responses for {len(students)} students; {len(report['unresolved'])} unresolved.")
+        ns.emit(result)
+        return
+    if report["unresolved"]:
+        raise ns.SkillError("unresolved_responses", "Some baseline responses need the instructor's decision first.",
+                            {"unresolved": report["unresolved"]})
+    ws = wb[tab]
+    hr, headers = ns.find_header_row(ws, ["student name", "email"])
+    email_col = next(c for h, c in headers.items() if "email" in h)
+    present = [ns.normalize(ws.cell(hr, email_col + i).value) for i in (1, 2)]
+    insert = present != [h.lower() for h in NEW_COLUMNS]
+    if insert and any(h in ns.normalize(ws.cell(hr, c).value) for c in range(1, ws.max_column + 1)
+                      for h in ("gender", "consent")):
+        raise ns.SkillError("class_tab_layout", f"'{tab}' already has a Gender or Consent column, but not as the two "
+                                                "columns just after Email. Ask her where they should be.")
+    if insert:
+        blockers = insert_blockers(wb, ws, email_col)
+        if blockers:
+            raise ns.SkillError("insert_columns_needed",
+                                f"Adding two columns after Email on '{tab}' could break it ({'; '.join(blockers)}). "
+                                f"Ask her to insert two blank columns just after Email, headed Gender and Consent, "
+                                "then run this again; Claude will fill them in.", {"reasons": blockers})
+    else:
+        old = {s.key: (ns.clean(ws.cell(s.row, email_col + 1).value), ns.clean(ws.cell(s.row, email_col + 2).value))
+               for s in students}
+        changed = [f"{s.name}: {old[s.key]} -> {values[s.key]}" for s in students
+                   if any(old[s.key]) and old[s.key] != values[s.key]]
+        if changed and not args.replace:
+            raise ns.SkillError("baseline_exists", "Gender and Consent are already filled in, and this would change "
+                                                   "some of them. Ask her before using --replace.",
+                                {"changes": changed[:20]})
+    before = snapshot_values(load_workbook(roster))
+    backup = ns.backup(roster, "before baseline")
+    if insert:
+        widths = {c: ws.column_dimensions[get_column_letter(c)].width for c in range(email_col + 1, ws.max_column + 1)
+                  if get_column_letter(c) in ws.column_dimensions}
+        ws.insert_cols(email_col + 1, 2)
+        for c, width in sorted(widths.items(), reverse=True):
+            ws.column_dimensions[get_column_letter(c + 2)].width = width
+        for i, header in enumerate(NEW_COLUMNS, start=1):
+            ws.column_dimensions[get_column_letter(email_col + i)].width = 10
+            cell = ws.cell(hr, email_col + i)
+            cell.value = header
+            cell.font = copy(ws.cell(hr, email_col).font)
+    written = {(tab, ws.cell(hr, email_col + i).coordinate): h for i, h in enumerate(NEW_COLUMNS, start=1)}
+    for s in students:
+        for i, value in enumerate(values[s.key], start=1):
+            ns.set_cell(ws, s.row, email_col + i, value or None)
+            written[(tab, ws.cell(s.row, email_col + i).coordinate)] = value or None
+    ns.save_workbook(wb, roster)
+    after = snapshot_values(load_workbook(roster))
+
+    def moved(key):   # where a cell from before should be now
+        t, coord = key
+        if t != tab or not insert:
+            return key
+        c = ws.cell(1, 1).parent[coord]
+        return (t, f"{get_column_letter(c.column + 2)}{c.row}") if c.column > email_col else key
+
+    from openpyxl.utils.cell import coordinate_from_string, column_index_from_string
+    wrong = []
+    for key, value in before.items():
+        letters, row = coordinate_from_string(key[1])
+        col = column_index_from_string(letters)
+        target = (key[0], f"{get_column_letter(col + 2)}{row}") if insert and key[0] == tab and col > email_col else key
+        if target in written:
+            continue
+        if after.get(target) != value:
+            wrong.append(f"'{target[0]}'!{target[1]}")
+    wrong += [f"'{t}'!{c}" for (t, c), v in written.items() if after.get((t, c)) != v]
+    expected_keys = {(k[0], f"{get_column_letter(column_index_from_string(coordinate_from_string(k[1])[0]) + 2)}"
+                             f"{coordinate_from_string(k[1])[1]}")
+                     if insert and k[0] == tab and column_index_from_string(coordinate_from_string(k[1])[0]) > email_col
+                     else k for k in before} | set(written)
+    wrong += [f"'{t}'!{c}" for (t, c) in after if (t, c) not in expected_keys]
+    if wrong:
+        import shutil
+        shutil.copy2(backup, roster)
+        raise ns.SkillError("write_verification_failed", "The workbook didn't save as intended, so the backup was "
+                                                         "restored and nothing changed.", {"cells": wrong[:20]})
+    result.update({"written_to": f"'{tab}', columns {get_column_letter(email_col + 1)}-"
+                                 f"{get_column_letter(email_col + 2)}" + (" (inserted after Email; the columns to the "
+                                                                          "right moved over by two)" if insert else ""),
+                   "backup": str(backup)})
+    warning = ns.write_log(roster.parent, "Baseline survey written",
+                           f"Gender and Consent for {len(students)} students on '{tab}'"
+                           f"{' (two columns inserted after Email)' if insert else ''}. Declined: "
+                           f"{report['declined'] or 'none'}; excluded: {report['excluded'] or 'none'}; no survey: "
+                           f"{report['no_survey'] or 'none'}. Backup: {backup.name}.")
+    if warning:
+        result["log_warning"] = warning
+    ns.emit(result)
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
@@ -705,6 +945,15 @@ def main():
             sp.add_argument("--accept-warnings", action="store_true")
             sp.add_argument("--replace", action="store_true", help="Replace a final table that already has entries")
         sp.set_defaults(func=lambda a, w=write: cmd_absences(a, w))
+    for name, write in (("baseline", False), ("write-baseline", True)):
+        sp = sub.add_parser(name)
+        sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
+        sp.add_argument("--csv", required=True, help="The Week 1 baseline survey export (.csv, number codes)")
+        sp.add_argument("--assign", action="append", default=[], help="RESPONSE_ID=Last, First (her decision)")
+        sp.add_argument("--leave-out", action="append", default=[], help="Response ID to ignore")
+        if write:
+            sp.add_argument("--replace", action="store_true", help="Change Gender/Consent values already filled in")
+        sp.set_defaults(func=lambda a, w=write: cmd_baseline(a, w))
     sp = add("log")
     sp.add_argument("--step", required=True)
     sp.add_argument("--details", required=True)

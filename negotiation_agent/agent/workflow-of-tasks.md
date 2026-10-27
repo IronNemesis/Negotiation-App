@@ -8,6 +8,7 @@ This workflow supports the system goal defined in `negotiation_agent/README.md`.
 
 The workflow has three stages, each started by the Instructor in the Claude desktop app:
 
+- **Week 1 (Baseline):** once the baseline survey closes, she asks Claude to record each student's gender and consent from it (T12). Skill: `negotiation-pairing`.
 - **Stage 1 (Draft):** a few days before class, she asks Claude to draft the matches for a simulation, optionally naming students she already knows will be absent. Skill: `negotiation-pairing`.
 - **Stage 2 (Bargaining sheet):** after the survey closes, a few hours before class, she saves the Qualtrics export and asks Claude to build the bargaining range sheet. Skill: `bargaining-range-sheet`. While the survey is open, she can also ask who hasn't answered yet (T10). On the **day-of path**, she skips this stage and builds the sheet once in class, after Stage 3.
 - **Stage 3 (Absences):** at the start of class, she tells Claude who is absent. Skill: `negotiation-pairing`, followed by a quick re-run of `bargaining-range-sheet`.
@@ -109,6 +110,7 @@ flowchart TD
 | T9 | [Apply Absences and Write Final Matches](task-specs/apply-absences-and-write-final-matches.md) | Remember | Agent | pairing |
 | T10 | [List Survey Non-Respondents](task-specs/list-survey-non-respondents.md) | Retrieve | Agent | bargaining sheet |
 | T11 | [Build Salary Outcomes Sheet](task-specs/build-salary-outcomes-sheet.md) | Act | Agent | bargaining sheet |
+| T12 | [Record Gender and Consent](task-specs/record-gender-and-consent.md) | Remember | Agent | pairing |
 | H1 | [Resolve Workbook or Survey Data Issue](task-specs/resolve-workbook-or-survey-data-issue.md) | Verify | Instructor | both |
 | H2 | [Review Draft Matches](task-specs/review-draft-matches.md) | Verify | Instructor | pairing |
 | H3 | [Send Role Emails](task-specs/send-role-emails.md) | Act | Instructor | pairing |

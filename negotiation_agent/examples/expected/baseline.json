@@ -1,0 +1,163 @@
+{
+  "students": {
+    "Adebayo, Tolu": [
+      "M",
+      "Yes"
+    ],
+    "Alvarez, Maya": [
+      "F",
+      "Yes"
+    ],
+    "Bennett, Owen": [
+      "M",
+      "No"
+    ],
+    "Brooks, Tyler": [
+      "M",
+      "Yes"
+    ],
+    "Castellano, Rosa": [
+      "F",
+      "Yes"
+    ],
+    "Chen, Priya": [
+      "F",
+      "Yes"
+    ],
+    "Dawson, Leah": [
+      "F",
+      "Yes"
+    ],
+    "Delgado, Marco": [
+      "M",
+      "Yes"
+    ],
+    "Evans, Jordan": [
+      "M",
+      "Yes"
+    ],
+    "Fitzgerald, Nora": [
+      "F",
+      "Yes"
+    ],
+    "García, Mateo": [
+      "M",
+      "Yes"
+    ],
+    "Hale, Simone": [
+      "F",
+      "Yes"
+    ],
+    "Hoang, Minh": [
+      "Other",
+      "Excluded"
+    ],
+    "Ibarra, Lucia": [
+      "F",
+      "Yes"
+    ],
+    "Jensen, Kai": [
+      "M",
+      "Yes"
+    ],
+    "Kowalski, Andy": [
+      "M",
+      "Yes"
+    ],
+    "Laurent, Camille": [
+      "F",
+      "Yes"
+    ],
+    "Lindqvist, Erik": [
+      "M",
+      "Yes"
+    ],
+    "Mahoney, Grace": [
+      "F",
+      "Yes"
+    ],
+    "Mendes, Rafael": [
+      "M",
+      "Yes"
+    ],
+    "Nakamura, Ren": [
+      "M",
+      "Yes"
+    ],
+    "Nguyen, Katherine": [
+      "F",
+      "Yes"
+    ],
+    "Novak, Ben": [
+      "M",
+      "Yes"
+    ],
+    "O'Neill, Siobhan": [
+      "F",
+      "Yes"
+    ],
+    "Ortiz, Lena": [
+      "F",
+      "No"
+    ],
+    "Park, Daniel": [
+      "M",
+      "Yes"
+    ],
+    "Park, Danielle": [
+      "F",
+      "Yes"
+    ],
+    "Quinn, Ava": [
+      "F",
+      "Yes"
+    ],
+    "Reyes, Noor": [
+      "F",
+      "Yes"
+    ],
+    "Rossi, Gianna": [
+      "F",
+      "Yes"
+    ],
+    "Sato, Hiro": [
+      "M",
+      "Yes"
+    ],
+    "Shah, Dev": [
+      "M",
+      "Yes"
+    ],
+    "Silva, Kai": [
+      "M",
+      "Yes"
+    ],
+    "Thornton, Jack": [
+      "M",
+      "Yes"
+    ],
+    "Underwood, Mia": [
+      "",
+      "No (no survey)"
+    ],
+    "Van der Berg, Elise": [
+      "F",
+      "Yes"
+    ],
+    "Walsh, Connor": [
+      "",
+      "No (no survey)"
+    ],
+    "Yilmaz, Deniz": [
+      "M",
+      "Yes"
+    ],
+    "Zimmerman, Tess": [
+      "F",
+      "Yes"
+    ]
+  },
+  "ask_about": [
+    "Evans, Jordan"
+  ]
+}
