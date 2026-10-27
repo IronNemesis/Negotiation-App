@@ -66,3 +66,16 @@ Every placement decision is in `placement_notes`. Repeats the rotation can't avo
 1. The workbook is backed up to `Backups/<name> <date> <time> before <code> draft|final.xlsx`.
 2. After saving, every cell of every tab is compared with the backup. If anything other than the intended cells changed, or an intended cell is wrong, the backup is restored and the command fails with `write_verification_failed`.
 3. Each action is logged in `Negotiation Log.xlsx` next to the workbook.
+
+## Gender and Consent (baseline survey)
+
+- **Read from** the Week 1 baseline export (number codes). The columns are `Q1` consent (1 agree, 2 decline), `Q11` first name, `Q14` last name, and `Q15` gender (1 Male, 2 Female, any other code Other, with `Q15_4_TEXT`). Survey previews are skipped.
+- **Matching:** responses are matched to the class list by name (exact, then a known nickname with a unique last name). Anything else is her decision (`--assign`, `--leave-out`). If someone took it twice, the latest response is used.
+- **Values written:**
+  - Gender: `M`, `F` or `Other`.
+  - Consent: `Yes` or `No`.
+  - A student who chose Other gets Consent `Excluded`: they're excluded from the research.
+  - A student with no response gets Consent `No (no survey)` and a blank Gender.
+- **Where:** two columns headed `Gender` and `Consent`, just after `Email` on the class list.
+- **Inserting the columns:** if they aren't there yet, they're inserted and everything to the right moves over by two. That only happens if nothing on the tab would break: no formulas, merged cells to the right of Email, conditional formatting, data validation, tables, or formulas or names elsewhere pointing at the tab. Otherwise she inserts the two blank columns herself and the script fills them.
+- **Checking the write:** after saving, every other cell is checked to be exactly where it was, or two columns to the right. Otherwise the backup is restored.

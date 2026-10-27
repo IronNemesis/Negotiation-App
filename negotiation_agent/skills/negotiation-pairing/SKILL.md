@@ -1,6 +1,6 @@
 ---
 name: negotiation-pairing
-description: Drafts student matches for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) in the instructor's own roster workbook, using her alphabetical method and her UC_1-style pair IDs; builds the BCC email lists for sending each role its packet; and on class day applies absences (UC_0, stranded partners join the previous match) and writes the final matches. Warns about repeat partners from earlier simulations. Use this skill whenever the instructor asks to pair, partner, match, or set up students for a negotiation, draft the matches, prepare role emails or BCC lists, says who is absent on a negotiation day, or asks to update or check the matches on a simulation tab, even if she doesn't name the skill.
+description: Drafts student matches for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) in the instructor's own roster workbook, using her alphabetical method and her UC_1-style pair IDs; builds the BCC email lists for sending each role its packet; and on class day applies absences (UC_0, stranded partners join the previous match) and writes the final matches. Warns about repeat partners from earlier simulations. Use this skill whenever the instructor asks to pair, partner, match, or set up students for a negotiation, draft the matches, prepare role emails or BCC lists, says who is absent on a negotiation day, asks to update or check the matches on a simulation tab, or wants gender and consent recorded from the baseline survey, even if she doesn't name the skill.
 ---
 
 # Negotiation Pairing
@@ -28,6 +28,31 @@ python scripts/pairing.py snapshot --roster "<roster>.xlsx"
 ```
 
 This shows the class size, missing emails, whether the draft and final tables are filled in, and whether roles are already locked. Mention anything surprising in one line.
+
+## Week 1: Gender and consent from the baseline survey (T12)
+
+Once the Week 1 baseline survey closes, she downloads the Qualtrics export with **number codes** and asks Claude to record each student's gender and consent. This is read **once** and written to the class list, where the experimental conditions for Used Car will use it.
+
+```bash
+python scripts/pairing.py baseline --roster "<roster>.xlsx" --csv "<baseline export>.csv"
+```
+
+This writes nothing. Show her the counts (`gender`, `consent`), then list:
+- who declined consent (`declined`);
+- who chose Other for gender, and so is excluded from the research (`excluded`);
+- who didn't take the survey (`no_survey`; they count as declined);
+- `duplicates`, where the latest response is used.
+
+Then resolve anything `unresolved`, as for any survey: ask whose response it is and pass `--assign "R_abc=Last, First"`, or `--leave-out R_abc`. On her OK:
+
+```bash
+python scripts/pairing.py write-baseline --roster "<roster>.xlsx" --csv "<baseline export>.csv" [--assign …]
+```
+
+Gender (`M`, `F`, `Other`) and Consent (`Yes`, `No`, `Excluded`, `No (no survey)`) go in two columns just after Email on the class list. The first time, the two columns are inserted, so her attendance columns move over by two. Tell her that.
+- **`insert_columns_needed`:** the tab has formulas or other things that wouldn't move safely. Ask her to insert two blank columns after Email in Excel, headed `Gender` and `Consent`, then run `write-baseline` again; it fills them.
+- **`baseline_exists`:** some values are already filled in differently. Show the `changes`, and only use `--replace` if she agrees.
+- **`survey_layout`, about answer text:** the export was downloaded with choice text. Ask her to download it again with number codes.
 
 ## Stage 1: Draft (a few days before class)
 
