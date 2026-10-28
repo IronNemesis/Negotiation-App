@@ -17,6 +17,22 @@
 4. With an odd count, the extra Seller joins the last match as a second Seller, unless that would make the last match's Buyer the "1" in a 1v2 for a second time, or repeat a partner. Then the extra student joins the nearest earlier match where neither happens (reported in `placement_notes`).
 5. Apply her swaps (`--swap`). Each swapped student takes the other's role and match.
 
+## Experimental Conditions (Used Car, once gender and consent are recorded)
+
+These are assumptions from Meeting 4, to confirm with her.
+
+1. Students whose Consent isn't `Yes` (`No`, `No (no survey)`, `Excluded`) are matched only with each other, by her alphabetical method. A lone one joins the smaller condition.
+2. Everyone else is split by gender. Within each gender, alphabetically, the first half is `I` and the second half `C`. An odd one out goes to `I` for the first gender and to `C` for the next, so the totals stay even.
+3. Within each condition, her method applies: first half Buyers, second half Sellers, matched in order. The extra student is placed as in step 4 above.
+4. Matches are numbered with all `I` matches first, then `C`. Each match of students without consent takes the condition with fewer students.
+5. **Writing:**
+   - The condition goes in a `CONDITION` column added next to the draft table.
+   - At the absence step, a stranded student joins the nearest earlier match **in the same condition** (or the next one). If there's none, she places them. Placing across conditions is a warning.
+   - The final table then gets each student's `Gender` (from the class list) and the `Intervention` column (their condition, for absent students too).
+6. **BCC lists:** four of them, Buyer-I, Buyer-C, Seller-I, Seller-C.
+
+Not built yet: swapping roles between two stranded students who both declined consent, which Meeting 4 allows.
+
 ## Drafting (Salary negotiation and later rotations)
 
 1. Take the class list, minus students she named as absent.

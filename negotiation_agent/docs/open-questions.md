@@ -15,6 +15,8 @@ The workflow is built from four meetings and her files: her roster workbook, Use
 | Salary: duplicate Form rows (both partners submitted) and duplicate Qualtrics responses. | The latest submission is used and the summary says so. | Salary sheet |
 | Conditions: balance I/C within each role, or across the whole class? | Within each role, as far as the method allows. | UC drafting |
 | Conditions: how do "first half / second half," gender balance, and same-condition matching fit together? | Within each gender, alphabetically, the first half is I and the second half C. Within each condition, her usual method: first half Buyers, second half Sellers. | UC drafting |
+| Conditions: where should each match's I/C go at drafting time, before the final table exists? | A `CONDITION` column next to the draft table. | UC drafting |
+| Conditions: when two stranded students who both declined consent have the same role, should Claude swap one's role and pair them (allowed in Meeting 4), or place them as usual? | Placed as usual; the role swap isn't built yet. | T9 |
 | Conditions: which condition do students who declined consent get? | They are paired with each other first and take whichever condition keeps the groups even. | UC drafting |
 | Is attendance in `Att - Fall` filled in after class? Could it ever be the source for absences? | Filled in after class; absences come from her in the chat. | H5 |
 | Meeting 3: she brings a running list of questions to class for students to answer. Is that how she fills in answers for students who missed the survey, and should she be able to type those answers into the chat for the sheet? | Students not in the export get a blank row with a "No survey response" comment; she fills them in by hand. | T7, T8 |

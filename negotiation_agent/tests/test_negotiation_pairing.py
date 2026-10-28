@@ -373,6 +373,74 @@ def test_write_baseline_asks_her_to_insert_columns_when_the_tab_has_formulas():
     assert att.cell(45, 11).value == '=COUNTIF(K3:K41,"x")' and att.cell(3, 5).value == "Yes"
 
 
+def conditions_workspace() -> Path:
+    """The roster before Used Car, with gender and consent recorded from the baseline survey."""
+    folder = baseline_workspace()
+    assert run(folder, "write-baseline", "--roster", BEFORE, "--csv", BASELINE_CSV, "--assign", EVANS)["ok"]
+    return folder
+
+
+def test_without_the_baseline_the_draft_has_no_conditions():
+    result = run(workspace(), "draft", "--roster", BEFORE)
+    assert result["ok"] and "condition_balance" not in result and "conditions_note" in result
+    assert all("condition" not in m for m in result["draft"])
+
+
+def test_conditions_draft_balances_gender_and_pairs_decliners():
+    folder = conditions_workspace()
+    result = run(folder, "draft", "--roster", BEFORE)
+    assert result["ok"] and not result["errors"], result
+    assert result["students"] == 39
+    labels = [m["condition"] for m in result["draft"]]
+    assert set(labels) == {"I", "C"} and labels == sorted(labels, key=["I", "C"].index)   # numbered I, then C
+    consent = {n: c for n, (_, c) in BASELINE["students"].items()}
+    for m in result["draft"]:   # students without consent are only ever matched with each other
+        people = m["BUYER"] + m["SELLER"]
+        assert len({consent[n] == "Yes" for n in people}) == 1, m
+    for condition in ("I", "C"):   # within each role, men and women are split about evenly between I and C
+        for role in ("BUYER", "SELLER"):
+            counts = result["condition_balance"][condition][role]
+            assert abs(counts.get("M", 0) - counts.get("F", 0)) <= 1, (condition, role, counts)
+    for role in ("BUYER", "SELLER"):
+        for gender in ("M", "F"):
+            i = result["condition_balance"]["I"][role].get(gender, 0)
+            c = result["condition_balance"]["C"][role].get(gender, 0)
+            assert abs(i - c) <= 1, (role, gender, i, c)
+    written = run(folder, "write-draft", "--roster", BEFORE)
+    assert written["ok"], written
+    ws = load_workbook(folder / BEFORE)["UC"]
+    tab = uc_tab(folder / BEFORE)
+    assert ws.cell(tab.draft_header, 4).value == "CONDITION"
+    assert [ws.cell(tab.draft_header + 1 + i, 4).value for i in range(2)] == ["I", "I"]
+    bcc = run(folder, "bcc", "--roster", BEFORE)
+    assert set(bcc["lists"]) == {"BUYER-I", "BUYER-C", "SELLER-I", "SELLER-C"}
+    assert sum(v["count"] for v in bcc["lists"].values()) == 39
+
+
+def test_absences_stay_within_the_condition_and_fill_gender_and_intervention():
+    folder = conditions_workspace()
+    assert run(folder, "write-draft", "--roster", BEFORE)["ok"]
+    draft = {m["match"]: m for m in run(folder, "draft", "--roster", BEFORE)["draft"]}
+    first_c = min(m for m, d in draft.items() if d["condition"] == "C")
+    absent = draft[first_c]["BUYER"][0]   # the first C match has no earlier C match: its Seller goes to the next one
+    proposal = run(folder, "absences", "--roster", BEFORE, "--absent", absent)
+    assert proposal["ok"] and not proposal["errors"], proposal
+    assert any(f"joins match {first_c + 1}" in m and "in condition C" in m for m in proposal["moves"])
+    final = run(folder, "write-final", "--roster", BEFORE, "--absent", absent)
+    assert final["ok"], final
+    ws = load_workbook(folder / BEFORE)["UC"]
+    tab = uc_tab(folder / BEFORE)
+    genders = {n: g for n, (g, _) in BASELINE["students"].items()}
+    rows = [r for r in range(2, tab.draft_header) if ws.cell(r, 2).value or ws.cell(r, 6).value]
+    for r in rows:
+        for name_col, gender_col in ((2, 5), (6, 9)):
+            if ws.cell(r, name_col).value:
+                assert (ws.cell(r, gender_col).value or "") == genders[ws.cell(r, name_col).value], r
+        assert ws.cell(r, 10).value in ("I", "C"), r
+    absent_row = next(r for r in rows if absent in (ws.cell(r, 2).value, ws.cell(r, 6).value))
+    assert ws.cell(absent_row, 4).value == "UC_0" and ws.cell(absent_row, 10).value == "C"
+
+
 def test_roles_are_locked_after_emails_go_out():
     folder = workspace()
     assert run(folder, "roles-sent", "--roster", DRAFTED)["ok"]

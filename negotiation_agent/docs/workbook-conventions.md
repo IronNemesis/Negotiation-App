@@ -54,7 +54,8 @@ This is the final version of the draft shown further down, after Evans, Jo was a
 - **A second student in the same role** (because of an odd count or an absence) gets their own row directly under the match, with the match number and the other role's cells left blank, and shares the match's pair ID (`UC_3` above).
 - **Absent students** are listed a few rows below the table, under their own role's columns, with their name, email, and `UC_0` (confirmed in Meeting 3).
 - **Students who drop the class** keep their history on earlier tabs. On the tab for the week they drop, they are listed as absent; on later tabs they are left off (confirmed in Meeting 3).
-- `Gender` and `Intervention` are filled in by the instructor. The skills leave them blank and never change them.
+- `Gender` and `Intervention`: once gender and consent are recorded from the baseline survey, the skill fills them in at the absence step. Gender comes from the class list; Intervention is the student's condition (`I` or `C`). Before that, the skills leave them blank (Meeting 4).
+- **Draft table:** with conditions, a `CONDITION` column is added next to the draft table's role columns, one label per match **(assumption: where she wants it)**.
 - **Later simulations carry history forward:** each student's earlier pair IDs appear in columns headed with the earlier simulations' codes, before the current one. For example, the `SL` tab has `Email | UC | SL` for each role. Used Car is the first simulation of the term, so its tab has only the `UC` column.
 
 ### Draft table (bottom)
