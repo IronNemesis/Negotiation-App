@@ -68,7 +68,14 @@ For the salary negotiation (`--simulation SL`), it uses her rotation: everyone k
 
 One effect to explain if it comes up: leaving out a student known to be absent shifts the halves, so the pairs after that point in the alphabet change. That is how her method works, not a mistake.
 
-**2. Review (H2).** Show the draft as a compact table (match, Buyer, Seller) and any `warnings` (repeat partners, or someone facing two partners alone for a second time) or `errors`. If `placement_notes` isn't empty, say in one line why the extra student isn't in the last match. She can:
+**Experimental conditions (Used Car only).** Once gender and consent are on the class list (T12 above), the Used Car draft also assigns each match a condition, `I` (intervention) or `C` (control):
+1. Students without consent are matched with each other.
+2. Everyone else: within each gender, the first half alphabetically is I and the second half is C.
+3. Within each condition, her usual alphabetical method decides roles and matches.
+
+The draft shows a `condition` per match and a `condition_balance` (men and women per condition and role). Mention the balance in one line, and say which matches are the students without consent. If the result has a `conditions_note`, the baseline hasn't been recorded yet, so there are no conditions. Say so, and offer to record it first.
+
+**2. Review (H2).** Show the draft as a compact table (match, Buyer, Seller, and the condition if there is one) and any `warnings` (repeat partners, or someone facing two partners alone for a second time) or `errors`. If `placement_notes` isn't empty, say in one line why the extra student isn't in the last match. She can:
 - **Approve** it.
 - **Ask for swaps.** Re-run `draft` with `--swap "Last, First;Last, First"` (two names from the class list, separated by `;`). Each keeps the other's role and match.
 - **Cancel.** Log it and stop.
@@ -94,7 +101,9 @@ python scripts/pairing.py write-draft --roster "<roster>.xlsx" [same --absent/--
 python scripts/pairing.py bcc --roster "<roster>.xlsx"
 ```
 
-Give her each role's list, ready to paste into Outlook's BCC field, and say where the text file is saved. Name anyone missing an email, so she can reach them another way.
+With conditions, there are four lists (`BUYER-I`, `BUYER-C`, `SELLER-I`, `SELLER-C`), because intervention students get different role packets. Make sure she sends each list the right packet.
+
+Give her each list, ready to paste into Outlook's BCC field, and say where the text file is saved. Name anyone missing an email, so she can reach them another way.
 
 **5. Role emails sent (H3).** When she says the role emails went out, record it. This locks roles for the simulation:
 
@@ -117,6 +126,7 @@ python scripts/pairing.py absences --roster "<roster>.xlsx" --absent "Evans" --a
 This writes nothing. It applies her rule:
 - Absent students get `UC_0`.
 - A partner left without anyone in the other role joins the match just before theirs, in the same role.
+- With conditions, they join the match just before **in the same condition**, and Gender and Intervention are filled in on the final table.
 - Match numbers keep their gaps; nobody's role changes.
 
 Results that need her answer:

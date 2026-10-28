@@ -11,6 +11,8 @@
 
 The Instructor emails each role its packet in one email, with all students in that role on BCC. T5 saves her the step of finding and copying those addresses.
 
+With experimental conditions (Used Car), there are four lists instead of two (Buyer-I, Buyer-C, Seller-I, Seller-C), because intervention students get different role packets (Meeting 4).
+
 For each role, it produces a ready-to-paste list of Cal Poly emails separated by semicolons, which Outlook accepts in the BCC field. The list includes every student in that role in the approved draft, second same-role students included. The lists go in the chat and in a small text file next to the workbook, so she can copy from either.
 
 T5 does not send anything and does not attach packets. Students learn their partners in class, so no partner information is included.

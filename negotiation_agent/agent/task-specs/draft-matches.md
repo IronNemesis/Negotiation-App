@@ -18,6 +18,12 @@ T2 drafts the matches using the Instructor's own method, so the result looks lik
 
 Students she named as absent in advance are left out of the draft and kept for T9, which records them as `_0`.
 
+**Experimental conditions (Used Car, Meeting 4).** Once gender and consent are on the class list (T12), T2 first assigns conditions, then applies the method above within each one:
+1. Students without consent are matched with each other.
+2. Everyone else: within each gender, alphabetically, the first half is Intervention (I) and the second half Control (C).
+
+Each match gets one condition, written in a `CONDITION` column next to the draft table. These details are assumptions to confirm with her; see `references/pairing-rules.md` in the skill.
+
 For the salary negotiation (`SL`) and later simulations set to rotate: each student keeps their side from the earlier simulation's draft (Used Car Buyers on the left as Supervisors, Sellers on the right as Subordinates), alphabetical within a side. The right column moves down one, and the bottom student goes to the top. Students who weren't in the earlier draft go on the smaller side; if drops leave the sides more than one apart, the alphabetically last students of the bigger side move over. The extra student (odd count) is placed as in step 4. Repeat partners the rotation can't avoid (for example, a student who joined another match in class because of an absence) are shown to her in review, not fixed (Meeting 3). The earlier simulation is named in the settings (`rotate_from`); if its tab has no draft table, T2 stops. Simulations with no drafting method in the settings can't be drafted yet, and T3 still checks any draft she makes herself.
 
 T2 makes no other choices. If she asks for changes in H2 ("swap these two", "move Ana to Seller"), T2 applies exactly those changes to the current draft rather than re-drafting.

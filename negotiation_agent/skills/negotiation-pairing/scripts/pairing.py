@@ -74,6 +74,9 @@ class Context:
         self.history, self.unlinked_history = ns.read_pair_history(self.wb, exclude_code=self.code).linked_to_class(
             self.students)
         self.solo = solo_history(self.wb, self.code, self.students)
+        self.baseline = read_baseline_columns(self.wb, self.class_tab, self.students)
+        # Experimental conditions (Used Car): only once gender and consent are on the class list (T12).
+        self.conditions = self.sim.get("conditions") if self.baseline else None
         self.same_person = {}
         for spec in getattr(args, "same_person", []) or []:
             tab_name, _, class_name = spec.partition("=")
@@ -103,6 +106,35 @@ class Context:
 
     def log(self, step: str, details: str) -> str | None:
         return ns.write_log(self.roster.parent, f"{step} ({self.code})", details)
+
+
+def read_baseline_columns(wb, tab: str, students: list[ns.Student]) -> dict[str, tuple[str, str]] | None:
+    """{student key: (gender, consent)} from the class list's Gender and Consent columns, or None if not there."""
+    ws = wb[tab]
+    found = ns.find_header_row(ws, ["student name", "email"])
+    if not found:
+        return None
+    hr, headers = found
+    g, c = headers.get("gender"), headers.get("consent")
+    if not (g and c):
+        return None
+    return {st.key: (ns.clean(ws.cell(st.row, g).value), ns.clean(ws.cell(st.row, c).value)) for st in students}
+
+
+def draft_conditions(ctx) -> dict[int, str]:
+    """{match: condition} from the CONDITION column next to the draft table, if there is one."""
+    ws, tab = ctx.wb[ctx.code], ctx.tab
+    col = next((c for c in range(1, ws.max_column + 2) if ns.clean(ws.cell(tab.draft_header, c).value).upper()
+                == "CONDITION"), None)
+    if not col:
+        return {}
+    out, current = {}, None
+    for m in tab.draft_members:
+        current = m.match if m.match is not None else current
+        label = ns.clean(ws.cell(m.row, col).value).upper()
+        if m.match is not None and label:
+            out[m.match] = label
+    return out
 
 
 def solo_history(wb, current: str, students: list[ns.Student]) -> dict[str, list[str]]:
@@ -137,8 +169,9 @@ def solo_of(people: list, roles: list[str]):
     return None
 
 
-def table_preview(groups: dict[int, list[Person]], roles: list[str]) -> list[dict]:
-    return [{"match": m, **{r: [p.name for p in people if p.role == r] for r in roles}}
+def table_preview(groups: dict[int, list[Person]], roles: list[str], conditions: dict[int, str] | None = None) -> list[dict]:
+    return [{"match": m, **{r: [p.name for p in people if p.role == r] for r in roles},
+             **({"condition": conditions.get(m, "")} if conditions else {})}
             for m, people in sorted(groups.items())]
 
 
@@ -244,7 +277,11 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
     ordered = sorted((s for s in ctx.students if s.key not in absent_keys), key=lambda s: s.key)
     if len(ordered) < 2:
         raise ns.SkillError("too_few_students", "Fewer than two students are left to match.")
-    if method == "alphabetical-halves":
+    conditions: dict[int, str] = {}
+    if method == "alphabetical-halves" and ctx.conditions:
+        groups, conditions, notes = draft_with_conditions(ctx, ordered)
+        side_notes = []
+    elif method == "alphabetical-halves":
         half = len(ordered) // 2
         left, right, side_notes = ordered[:half], ordered[half:], []
     else:
@@ -252,7 +289,8 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
         # moves down one and the bottom student goes to the top.
         left, right, side_notes = sides_from_previous(ctx, ordered)
         right = right[-1:] + right[:-1]
-    groups, notes = pair_sides(ctx, left, right)
+    if not conditions:
+        groups, notes = pair_sides(ctx, left, right)
     notes = side_notes + notes
     for spec in args.swap:
         names = [n.strip() for n in spec.split(";")]
@@ -265,7 +303,79 @@ def compute_draft(ctx: Context, args) -> tuple[dict[int, list[Person]], list[Per
         ia, ib = groups[ma].index(person_a), groups[mb].index(person_b)
         groups[ma][ia] = Person(b.name, "", person_a.role, b, "exact")
         groups[mb][ib] = Person(a.name, "", person_b.role, a, "exact")
-    return groups, [Person(p.name, "", "", p.student, "exact") for p in absent], notes
+    return groups, [Person(p.name, "", "", p.student, "exact") for p in absent], notes, conditions
+
+
+def draft_with_conditions(ctx: Context, ordered: list[ns.Student]) -> tuple[dict, dict[int, str], list[str]]:
+    """Used Car with experimental conditions (Meeting 4; assumptions to confirm with her):
+    1. Students who didn't consent (No, no survey, or Excluded) are matched with each other.
+    2. Everyone else: within each gender, alphabetically, the first half is the first condition (I) and the
+       second half the second (C); an odd one out alternates between conditions across genders.
+    3. Within each group, her usual method: first half Buyers, second half Sellers, matched in order.
+    Matches are numbered condition by condition; each decliners' match takes the condition with fewer students."""
+    first, second = ctx.conditions
+    info = ctx.baseline
+    research = [s for s in ordered if info.get(s.key, ("", ""))[1] == "Yes"]
+    decliners = [s for s in ordered if s not in research]
+    notes = []
+    by_gender: dict[str, list] = {}
+    for s in research:
+        by_gender.setdefault(info[s.key][0] or "unknown", []).append(s)
+    cond = {first: [], second: []}
+    extra_to_first = True
+    for gender in sorted(by_gender):
+        people = by_gender[gender]
+        k = len(people) // 2 + (len(people) % 2 if extra_to_first else 0)
+        if len(people) % 2:
+            extra_to_first = not extra_to_first
+        cond[first] += people[:k]
+        cond[second] += people[k:]
+    if len(decliners) == 1:   # nobody to pair them with: they join the smaller condition's students
+        smaller = min(cond, key=lambda c: len(cond[c]))
+        cond[smaller].append(decliners[0])
+        notes.append(f"{decliners[0].name} is the only student without consent, so they are matched with "
+                     f"{smaller} students.")
+        decliners = []
+
+    def block(people):
+        people = sorted(people, key=lambda s: s.key)
+        if len(people) < 2:
+            return [], [f"{people[0].name} has nobody to be matched with in their group."] if people else []
+        half = len(people) // 2
+        groups, block_notes = pair_sides(ctx, people[:half], people[half:])
+        return [groups[m] for m in sorted(groups)], block_notes
+
+    blocks = {c: block(cond[c]) for c in cond}
+    declined, declined_notes = block(decliners)
+    notes += blocks[first][1] + blocks[second][1] + declined_notes
+    counts = {c: len(cond[c]) for c in cond}
+    extra = {first: [], second: []}
+    for people in declined:
+        c = min(counts, key=lambda x: counts[x])
+        extra[c].append(people)
+        counts[c] += len(people)
+    groups, conditions, n = {}, {}, 0
+    for c in (first, second):
+        for people in blocks[c][0] + extra[c]:
+            n += 1
+            groups[n] = people
+            conditions[n] = c
+    if decliners:
+        notes.append(f"Students without consent are matched with each other: "
+                     f"{', '.join(str(m) for m in groups if any(p.student in decliners for p in groups[m]))}.")
+    return groups, conditions, notes
+
+
+def condition_balance(ctx: Context, groups: dict, conditions: dict[int, str]) -> dict:
+    """How many students of each gender are in each condition and role (research students only)."""
+    out = {c: {r: {} for r in ctx.roles} for c in ctx.conditions}
+    for m, people in groups.items():
+        for p in people:
+            gender, consent = ctx.baseline.get(p.key, ("", ""))
+            if consent == "Yes" and m in conditions:
+                bucket = out[conditions[m]][p.role]
+                bucket[gender or "unknown"] = bucket.get(gender or "unknown", 0) + 1
+    return out
 
 
 def sides_from_previous(ctx: Context, ordered: list[ns.Student]) -> tuple[list, list, list[str]]:
@@ -399,11 +509,15 @@ def cmd_snapshot(args):
 
 def cmd_draft(args, write: bool = False):
     ctx = Context(args)
-    groups, absent, notes = compute_draft(ctx, args)
+    groups, absent, notes, conditions = compute_draft(ctx, args)
     checks = check_groups(ctx, groups, absent, "draft")
     result = {"ok": True, "simulation": ctx.code, "matches": len(groups), "students": sum(map(len, groups.values())),
-              "known_absent": [p.name for p in absent], "draft": table_preview(groups, ctx.roles),
+              "known_absent": [p.name for p in absent], "draft": table_preview(groups, ctx.roles, conditions),
+              **({"condition_balance": condition_balance(ctx, groups, conditions)} if conditions else {}),
               "placement_notes": notes,
+              **({"conditions_note": "Gender and consent aren't on the class list yet (baseline survey), so this "
+                                     "draft has no experimental conditions."}
+                 if ctx.sim.get("conditions") and not ctx.conditions else {}),
               "swaps_applied": args.swap, **checks}
     if not write:
         ctx.log("T2 Draft preview", f"{len(groups)} matches; absent: {[p.name for p in absent] or 'none'}; "
@@ -436,14 +550,19 @@ def cmd_draft(args, write: bool = False):
                                              f"tab has {len(region)} numbered rows under MATCH. Add match numbers to "
                                              "the tab and try again.")
     written: dict = {}
+    cond_col = max(tab.draft_columns.values()) + 1 if conditions else None
+    if cond_col:
+        set_tracked(ws, written, tab.draft_header, cond_col, "CONDITION")
     for i, row in enumerate(region):
         if i < len(rows):
             match, by_role = rows[i]
             set_tracked(ws, written, row, tab.draft_match_column, match)
             for role, col in tab.draft_columns.items():
                 set_tracked(ws, written, row, col, by_role[role].name if by_role[role] else None)
+            if cond_col:
+                set_tracked(ws, written, row, cond_col, conditions.get(match) if match is not None else None)
         else:  # unused prepared rows: clear names and the leftover match number, as on her own tabs
-            for col in (tab.draft_match_column, *tab.draft_columns.values()):
+            for col in (tab.draft_match_column, *tab.draft_columns.values(), *([cond_col] if cond_col else [])):
                 if ws.cell(row, col).value is not None:
                     set_tracked(ws, written, row, col, None)
     backup = save_and_verify(ctx, written, f"before {ctx.code} draft")
@@ -482,12 +601,19 @@ def cmd_bcc(args):
     if not members:
         raise ns.SkillError("no_draft_table", f"The {ctx.code} draft table is empty. Write the draft first.")
     groups = ctx.tab_groups(members)
+    conditions = draft_conditions(ctx)
+    # Each student's condition is their draft match's (absence moves keep them within it).
+    cond_of = {ctx.person_from_tab(m).key: c for match, ms in ctx.tab.groups(tab.draft_members).items()
+               for m in ms for c in [conditions.get(match)] if c} if conditions else {}
     lists, missing = {}, []
     for role in ctx.roles:
         people = [p for ps in groups.values() for p in ps if p.role == role]
-        emails = [p.email for p in people if p.email]
         missing += [p.name for p in people if not p.email]
-        lists[role] = {"count": len(emails), "bcc": "; ".join(emails)}
+        for label in (sorted(set(cond_of.values()), key=list(ctx.sim.get("conditions") or []).index)
+                      if conditions else [None]):
+            chosen = [p for p in people if label is None or cond_of.get(p.key) == label]
+            emails = [p.email for p in chosen if p.email]
+            lists[f"{role}-{label}" if label else role] = {"count": len(emails), "bcc": "; ".join(emails)}
     path = ctx.roster.parent / f"{ctx.code} role emails {date.today().isoformat()}.txt"
     text = "\n\n".join(f"{role} ({v['count']} students):\n{v['bcc']}" for role, v in lists.items())
     try:
@@ -549,7 +675,9 @@ def propose_final(ctx: Context, args):
             raise ns.SkillError("bad_option", f"--place {spec}: match {match} isn't a match still in use.")
         placements[student.key] = int(match)
     final = {m: list(remaining[m]) for m in sorted(complete)}
-    moves, needs_placement = [], []
+    conds = draft_conditions(ctx)   # with experimental conditions, a stranded student stays in their condition
+    same = (lambda a, b: conds.get(a) == conds.get(b)) if conds else (lambda a, b: True)
+    moves, needs_placement, cross = [], [], []
     for m in sorted(set(remaining) - complete):
         stranded = remaining[m]
         if not stranded:
@@ -560,11 +688,20 @@ def propose_final(ctx: Context, args):
         for p in stranded:
             if p.key in placements:
                 target, how = placements[p.key], "placed by the instructor"
+                if not same(target, m):
+                    cross.append(f"{p.name} (condition {conds.get(m)}) was placed in match {target}, which is "
+                                 f"condition {conds.get(target)}.")
             else:
-                earlier = [x for x in final if x < m]
-                later = [x for x in final if x > m]
+                earlier = [x for x in final if x < m and same(x, m)]
+                later = [x for x in final if x > m and same(x, m)]
                 target = earlier[-1] if earlier else (later[0] if later else None)
-                how = "the match just before" if earlier else "the next match, since there is no earlier one"
+                in_cond = f" in condition {conds[m]}" if conds.get(m) else ""
+                how = (f"the match just before{in_cond}" if earlier
+                       else f"the next match{in_cond}, since there is no earlier one")
+                if target is None and conds:
+                    needs_placement.append({"student": p.name, "from_match": m, "suggested_match": None,
+                                            "reason": f"no other match in condition {conds.get(m)} is left"})
+                    continue
                 if target is None:
                     raise ns.SkillError("no_match_left", "No complete match is left to join.")
                 too_big = len(final[target]) + 1 > MAX_GROUP
@@ -584,17 +721,19 @@ def propose_final(ctx: Context, args):
                          f"(match {m}) {why}; {how}.")
     all_absent = absent + extra_absent
     checks = check_groups(ctx, final, all_absent, "final", draft_roles)
+    checks["warnings"] += cross
     if needs_placement:
         checks["errors"].append("Some stranded students need the instructor to choose a match.")
-    return final, all_absent, dropped, moves, needs_placement, checks, draft_roles
+    return final, all_absent, dropped, moves, needs_placement, checks, draft_roles, conds
 
 
 def cmd_absences(args, write: bool = False):
     ctx = Context(args)
-    final, absent, dropped, moves, needs_placement, checks, _ = propose_final(ctx, args)
+    final, absent, dropped, moves, needs_placement, checks, _, conds = propose_final(ctx, args)
     result = {"ok": True, "simulation": ctx.code, "absent": [p.name for p in absent],
               "dropped": [p.name for p in dropped], "moves": moves,
-              "needs_placement": needs_placement, "final": table_preview(final, ctx.roles), "matches": len(final),
+              "needs_placement": needs_placement, "final": table_preview(final, ctx.roles, conds),
+              "matches": len(final),
               **checks}
     if not write:
         ctx.log("T9 Absence proposal", f"Absent: {[p.name for p in absent] or 'none'}; "
@@ -613,6 +752,16 @@ def cmd_absences(args, write: bool = False):
     role_cols = {rc.role: rc for rc in tab.final_columns}
     table_cols = {tab.match_column} | {c for rc in tab.final_columns for c in
                                        (rc.name, rc.email, rc.current_id, *rc.prior_ids.values())}
+    # With conditions, Gender (from the class list) and Intervention (the condition) are filled in too (Meeting 4).
+    gender_cols, intervention_col = {}, None
+    if conds:
+        hr = tab.final_header
+        gender_cols = {rc.role: rc.current_id + 1 for rc in tab.final_columns
+                       if ns.normalize(ws.cell(hr, rc.current_id + 1).value) == "gender"}
+        intervention_col = next((c for c in range(1, ws.max_column + 2)
+                                 if ns.normalize(ws.cell(hr, c).value) == "intervention"), None)
+        table_cols |= set(gender_cols.values()) | ({intervention_col} if intervention_col else set())
+    cond_of = {p.key: conds[m] for m, ps in ctx.tab_groups(tab.draft_members).items() for p in ps if m in conds}
     # Columns beside the table that she fills herself (Gender, Intervention): never written, but checked.
     other_cols = [c for c in range(1, max(table_cols) + 3) if c not in table_cols]
     occupied = [ws.cell(r, c).coordinate for r in region for c in table_cols
@@ -635,6 +784,10 @@ def cmd_absences(args, write: bool = False):
 
     def write_person(row, p: Person, role: str, pair_id: str):
         rc = role_cols[role]
+        if role in gender_cols:
+            set_tracked(ws, written, row, gender_cols[role], (ctx.baseline or {}).get(p.key, ("", ""))[0] or None)
+        if intervention_col and cond_of.get(p.key):
+            set_tracked(ws, written, row, intervention_col, cond_of[p.key])
         set_tracked(ws, written, row, rc.name, p.name)
         set_tracked(ws, written, row, rc.email, p.email or (p.student.email if p.student else None))
         set_tracked(ws, written, row, rc.current_id, pair_id)
