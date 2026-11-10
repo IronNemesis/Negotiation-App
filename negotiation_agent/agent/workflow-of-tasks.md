@@ -111,6 +111,7 @@ flowchart TD
 | T10 | [List Survey Non-Respondents](task-specs/list-survey-non-respondents.md) | Retrieve | Agent | bargaining sheet |
 | T11 | [Build Salary Outcomes Sheet](task-specs/build-salary-outcomes-sheet.md) | Act | Agent | bargaining sheet |
 | T12 | [Record Gender and Consent](task-specs/record-gender-and-consent.md) | Remember | Agent | pairing |
+| T13 | [Build Process Points Sheet](task-specs/build-process-points-sheet.md) | Act | Agent | bargaining sheet |
 | H1 | [Resolve Workbook or Survey Data Issue](task-specs/resolve-workbook-or-survey-data-issue.md) | Verify | Instructor | both |
 | H2 | [Review Draft Matches](task-specs/review-draft-matches.md) | Verify | Instructor | pairing |
 | H3 | [Send Role Emails](task-specs/send-role-emails.md) | Act | Instructor | pairing |

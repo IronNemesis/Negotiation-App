@@ -1,6 +1,6 @@
 ---
 name: bargaining-range-sheet
-description: Cleans a Qualtrics survey export for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) and builds the instructor's bargaining range sheet for the debrief, with one row per match, the Buyer on the left, OUTCOME in the middle, and the Seller mirrored on the right, using the matches from her roster workbook. Fixes obvious typos in prices and highlights them, keeps unclear answers as typed, matches responses to students by name and email, and leaves ACTUAL IO and OUTCOME blank for class. Use this skill whenever the instructor mentions a Qualtrics or survey export or CSV for a negotiation, the bargaining range sheet, bargaining zones, reservation prices or BATNAs from the survey, cleaning the survey data, rebuilding the sheet after absences or building it in class, asks who hasn't filled out the survey yet, or wants the Salary negotiation outcomes sheet built from the Salary surveys and the in-class Google Form responses, even if she doesn't name the skill.
+description: Builds the instructor's debrief sheets for in-class negotiation simulations from her survey exports and roster workbook: the Used Car bargaining range sheet from the Qualtrics export (Buyer left, OUTCOME middle, Seller mirrored), the Salary outcomes sheet from the two Salary surveys plus the in-class Google Form, and the Equity Splits process points sheet from the in-class Google Form. Fixes obvious typos and highlights them, keeps unclear answers as typed, and matches responses to students by name and email. Use this skill whenever the instructor mentions a Qualtrics or survey export, a Google Form CSV, the bargaining range sheet, bargaining zones, reservation prices or BATNAs, the Salary outcomes sheet, process points, cleaning the survey data, rebuilding a sheet after absences or in class, or asks who hasn't filled out the survey or Form yet, even if she doesn't name the skill.
 ---
 
 # Bargaining Range Sheet
@@ -100,6 +100,34 @@ Unresolved items:
 - **Survey items:** the same as step 3 above.
 
 `missing` works the same way for Salary (pass both exports) to list who hasn't done either survey.
+
+## The Equity Splits process points sheet (T13)
+
+After the Equity Splits negotiation, each student fills in the Google Form once for each teammate, scoring them 0–5 on Trust, Respect, Fairness, Interests and Future. She downloads the responses as a CSV in class and asks for the process points sheet. There is no Qualtrics export. The teams come from her roster's `ES` tab (the final table if absences are in, otherwise the draft).
+
+```bash
+python scripts/brs.py prepare --simulation ES --roster "<roster>" --form "<Form responses>.csv"
+python scripts/brs.py build   --simulation ES --roster "<roster>" --form "<Form responses>.csv" --week 4
+```
+
+She's in front of the class: `prepare`, then `build` straight away unless something is `unresolved`, then one short message.
+
+What to tell her:
+- **Where the sheet is:** next to the Form CSV, as `<course and term> Week <N> - Equity Splits Process Points.xlsx`. It has her layout (one row per rating, sorted by trio, TOTAL as a formula), a `By Student` tab (ratings given and received, average total), and the Form export untouched on `Raw`.
+- **Who hasn't rated every teammate** (`not_rated_everyone`): they're highlighted yellow on `By Student`. Offer the BCC list from `missing` if she wants to chase them.
+- **What was corrected** (`corrected`, orange on the sheet, with what was typed in a comment): trio numbers (`#1`, or a number that doesn't match the names), misspelled names, and roles. Names and roles always come from the `ES` tab. Give a count and one example, not the whole list.
+- **Scores kept as typed** (`unclear_scores`, light red): anything that isn't a whole number from 0 to 5.
+- **Duplicates:** someone rated the same teammate twice; the later one is used.
+
+Unresolved items (`unresolved`), each with its Form `form_row`:
+- **`observer`:** the submitter's name doesn't match one student. Ask who it is, then pass `--observer "ROW=Last, First"`.
+- **`partner`:** the person rated isn't in the submitter's trio (or they rated themselves). Ask whom they meant, then pass `--partner "ROW=Last, First"`, or `--form-skip ROW` to leave the row out.
+
+```bash
+python scripts/brs.py missing --simulation ES --roster "<roster>" --form "<Form responses>.csv"
+```
+
+lists who still owes ratings (and whom they haven't rated), with a BCC list.
 
 ## The survey's name dropdown
 

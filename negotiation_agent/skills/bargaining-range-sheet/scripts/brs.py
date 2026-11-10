@@ -8,7 +8,8 @@ Commands (task IDs refer to negotiation_agent/agent/task-specs):
 
 Each prints one JSON object. "ok": false comes with an "error" code and a plain-language "message".
 The Salary negotiation (--simulation SL) has its own sheet, built by salary.py: two Qualtrics exports (--csv twice)
-and the in-class Google Form (--form).
+and the in-class Google Form (--form). Equity Splits (--simulation ES) has the process points sheet, built by
+process_points.py from the in-class Google Form alone (--form).
 Decisions from the instructor (H4) are passed to every command with --assign, --use, --leave-out,
 and --latest-duplicates.
 """
@@ -595,6 +596,10 @@ def run(args, mode: str):
         import salary
         salary.run(args, mode, sim)
         return
+    if sim.get("layout") == "process_points":
+        import process_points
+        process_points.run(args, mode, sim)
+        return
     if len(args.csv) != 1:
         raise ns.SkillError("bad_option", f"{sim['name']} uses one Qualtrics export; pass --csv once.")
     roster, export = Path(args.roster).expanduser().resolve(), Path(args.csv[0]).expanduser().resolve()
@@ -673,12 +678,16 @@ def main():
     for name in ("prepare", "build", "missing"):
         sp = sub.add_parser(name)
         sp.add_argument("--roster", required=True, help="The instructor's roster workbook (.xlsx)")
-        sp.add_argument("--csv", required=True, action="append",
+        sp.add_argument("--csv", action="append", default=[],
                         help="The Qualtrics export (.csv); for Salary, pass both (Supervisor and Subordinate)")
-        sp.add_argument("--form", help="Salary: the in-class Google Form responses, downloaded as .csv")
+        sp.add_argument("--form", help="Salary and Equity Splits: the in-class Google Form responses, as .csv")
         sp.add_argument("--form-match", action="append", default=[],
                         help="Salary: 'ROW=MATCH' to put a Form row (its row number in the CSV) on a match")
-        sp.add_argument("--form-skip", action="append", default=[], help="Salary: a Form row number to leave out")
+        sp.add_argument("--form-skip", action="append", default=[], help="A Form row number to leave out")
+        sp.add_argument("--observer", action="append", default=[],
+                        help="Equity Splits: 'ROW=Last, First' for who submitted a Form row")
+        sp.add_argument("--partner", action="append", default=[],
+                        help="Equity Splits: 'ROW=Last, First' for whom a Form row rates")
         sp.add_argument("--simulation", default="UC", help="Simulation code (default UC)")
         sp.add_argument("--name-column", help="Question code of the name dropdown, if it isn't found on its own")
         sp.add_argument("--assign", action="append", default=[], help="RESPONSE_ID=Last, First (her decision)")

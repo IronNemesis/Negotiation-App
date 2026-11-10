@@ -24,6 +24,10 @@ python negotiation_agent/examples/tools/make_examples.py
 | `BUS+4489+F26+Week+1+-+Negotiation+Baseline+Survey_September+30,+2026_09.44.csv` | The Week 1 baseline survey in her format (number codes): two students decline consent, one chooses Other for gender, a nickname, lowercase names, a misspelled last name (asked), a student who took it twice and changed their consent, two who didn't take it, and a survey preview | Gender and consent (T12) |
 | `expected/baseline.json`, `tools/make_baseline_example.py` | What T12 should record for each student, and the generator | |
 | `expected/salary.json`, `tools/make_salary_examples.py` | The planted Salary cases, and their generator (run after `make_examples.py`; it uses the pairing skill itself to make the `SL` tab) | |
+| `BUS 4489 F26 Roster - Equity Splits prepared.xlsx` | After Salary: Mia Underwood has dropped (38 students), Gender and Consent are recorded, and an empty `ES` tab is prepared with three roles (Michael, Phuc, Georg) | Equity Splits drafting: 12 teams, two of four |
+| `BUS 4489 F26 Roster - Equity Splits in class.xlsx` | The same, with the ES draft and the final teams after three absences (two filled by the extras, one team merged), made by the pairing skill itself | The process points sheet (T13) |
+| `BUS 4489 F26 Equity Splits Process Points (Responses) - Form Responses 1.csv` | The in-class Google Form: a trio typed `#1`, a wrong trio number, a wrong role, a misspelled last name, lowercase names with trailing spaces, a score of 6, a rating submitted twice, and one rating never submitted | T13 matching and cleaning |
+| `expected/equity.json`, `tools/make_equity_examples.py` | The ES draft, absences, final teams and planted Form cases, and their generator (run after `make_salary_examples.py`) | |
 
 ## Planted Cases
 

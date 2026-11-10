@@ -99,3 +99,19 @@ MATCH | SUP FIRST LAST | ACTUAL INITIAL OFFER* | INITIAL OFFER  TARGET  RESERVAT
 - Three-person matches, the absent block, alternate shading, and the legend work as on the Used Car sheet.
 - A match with no Form row gets a comment on its match number.
 - Tabs: the sheet, `Roles`, `Supervisor survey`, `Subordinate survey`, and `Form` (the exports untouched).
+
+## The Equity Splits Process Points Sheet
+
+**The Form** (one row per rating): Timestamp, `TRIO`, the observer's first and last name and role, the partner's first and last name and role, then five scores 0–5 (Trust, Respect, Fairness, Interests, Future). Columns are found by the start of their header, and the scores by their keyword, so small wording changes are fine.
+
+**Matching a row:**
+1. The observer is found among the students on the `ES` tab: exact name, a known nickname, or a close spelling, if only one student fits. If none fits, the trio number typed is used to look among that trio only. Otherwise she decides (`--observer`).
+2. The observer's trio comes from the `ES` tab, not from what was typed.
+3. The partner is found among the observer's teammates only, the same way. Someone in another trio, or the observer themself, is hers to decide (`--partner`, `--form-skip`).
+4. The same observer rating the same partner twice: the later submission is used.
+
+**The sheet** (her Week 4 layout):
+- **Main tab** (`Week <N> Process Points`): `TRIO`, the Form's observer and partner columns, the five scores, and `TOTAL` (`=SUM`). Names and roles are written from the `ES` tab. TRIO, the partner's columns, and TOTAL are bold. Rows are sorted by trio, then by the person assessed (in role order), then by the observer. Alternate trios are shaded green. The panes are frozen at `H2`.
+- **Highlights:** orange for a corrected trio, name or role (what was typed is in a comment; changes of case or spacing alone aren't corrections). Light red for a score that isn't a whole number from 0 to 5, kept as typed.
+- **`By Student` tab** *(an assumption)*: trio, name, role, ratings given out of those expected, whom they haven't rated yet, and formulas for ratings received, points received, and the average total. A student who hasn't rated every teammate is yellow. Absent students are listed below. A legend explains the colors.
+- **`Raw` tab:** the Form export, untouched.

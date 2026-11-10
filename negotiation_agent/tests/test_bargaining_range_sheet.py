@@ -419,6 +419,80 @@ def test_existing_in_class_entries_are_protected():
     assert load_workbook(folder / SHEET).worksheets[0].cell(2, outcome_col).value == "9.2K"
 
 
+ES_ROSTER = "BUS 4489 F26 Roster - Equity Splits in class.xlsx"
+ES_FORM = "BUS 4489 F26 Equity Splits Process Points (Responses) - Form Responses 1.csv"
+EQUITY = json.loads((EXAMPLES / "expected" / "equity.json").read_text(encoding="utf-8"))
+
+
+def es_workspace() -> Path:
+    tmp = Path(tempfile.mkdtemp())
+    for f in (ES_ROSTER, ES_FORM):
+        shutil.copy(EXAMPLES / f, tmp / f)
+    return tmp
+
+
+def test_process_points_sheet_from_the_form():
+    folder = es_workspace()
+    form = EQUITY["form"]
+    prepared = run(folder, "prepare", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM)
+    assert prepared["ok"] and prepared["ready_to_build"], prepared
+    assert prepared["teams"] == 11 and sorted(prepared["absent"]) == sorted(EQUITY["absent"])
+    assert prepared["form_rows"] == form["responses"]
+    fixed = {(c["student"], c["column"]): (c["typed"], c["now"]) for c in prepared["corrected"]}
+    assert fixed[(form["trio_hash"]["observer"], "trio")][0] == "#1"
+    assert fixed[(form["wrong_trio"]["observer"], "trio")] == (form["wrong_trio"]["typed"], form["wrong_trio"]["actual"])
+    assert (form["wrong_role"]["observer"], "obs_role") in fixed
+    assert any(c["column"] == "par_last" and c["typed"] == form["misspelled_partner"]["typed"] for c in prepared["corrected"])
+    assert not any(c["student"] == form["lowercase"]["observer"] for c in prepared["corrected"])   # case isn't a fix
+    assert [u["typed"] for u in prepared["unclear_scores"]] == [str(form["out_of_range"]["value"])]
+    assert len(prepared["duplicates"]) == 1 and form["duplicate"]["observer"] in prepared["duplicates"][0]
+    assert prepared["not_rated_everyone"] == {form["missing_rating"]["observer"]: [form["missing_rating"]["partner"]]}
+    assert prepared["ratings_used"] == prepared["ratings_expected"] - 1
+    built = run(folder, "build", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM, "--week", "4")
+    assert built["ok"], built
+    wb = load_workbook(built["workbook"])
+    assert wb.sheetnames == ["Week 4 Process Points", "By Student", "Raw"]
+    ws = wb["Week 4 Process Points"]
+    assert ws.cell(1, 1).value == "TRIO" and ws.cell(1, 13).value == "TOTAL" and ws.freeze_panes == "H2"
+    rows = list(ws.iter_rows(min_row=2, values_only=True))
+    assert len(rows) == prepared["ratings_used"]
+    assert [r[0] for r in rows] == sorted(r[0] for r in rows)   # sorted by trio
+    assert all(r[12] == f"=SUM(H{i}:L{i})" for i, r in enumerate(rows, start=2))
+    dup = next(r for r in rows if f"{r[2]}, {r[1]}" == form["duplicate"]["observer"]
+               and f"{r[5]}, {r[4]}" == form["duplicate"]["partner"])
+    assert dup[7] == form["duplicate"]["used_trust"]   # the later submission
+    misspelled = next(c for c in ws["F"] if fill_of(c) == "F8CBAD")
+    assert misspelled.comment and form["misspelled_partner"]["typed"] in misspelled.comment.text
+    by = wb["By Student"]
+    yellow = [(by.cell(r, 3).value, by.cell(r, 2).value) for r in range(2, by.max_row + 1) if fill_of(by.cell(r, 2)) == "FFFF00"]
+    first, last = ns_split(form["missing_rating"]["observer"])
+    assert yellow == [(last, first)]
+    assert wb["Raw"].max_row == form["responses"] + 1
+    missing = run(folder, "missing", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM)
+    assert missing["ok"] and list(missing["missing"]) == [form["missing_rating"]["observer"]] and "@" in missing["bcc"]
+
+
+def test_process_points_asks_about_a_rating_it_cant_place():
+    folder = es_workspace()
+    rows = (folder / ES_FORM).read_text(encoding="utf-8").splitlines()
+    cells = rows[1].split(",")
+    cells[5], cells[6] = "Zelda", "Nobody"   # a partner who isn't in the observer's trio or the class
+    rows[1] = ",".join(cells)
+    (folder / ES_FORM).write_text("\n".join(rows) + "\n", encoding="utf-8")
+    prepared = run(folder, "prepare", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM)
+    assert prepared["ok"] and not prepared["ready_to_build"]
+    assert [(u["type"], u["form_row"]) for u in prepared["unresolved"]] == [("partner", 2)]
+    refused = run(folder, "build", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM, "--week", "4")
+    assert not refused["ok"] and refused["error"] == "unresolved_responses"
+    skipped = run(folder, "build", "--simulation", "ES", "--roster", ES_ROSTER, "--form", ES_FORM, "--week", "4",
+                  "--form-skip", "2")
+    assert skipped["ok"], skipped
+
+
+def ns_split(name: str) -> tuple[str, str]:
+    last, _, first = name.partition(", ")
+    return first, last
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in list(globals().items()):

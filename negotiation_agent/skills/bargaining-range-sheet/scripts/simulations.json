@@ -99,5 +99,36 @@
       "sub_approach": "To what extent was THE SUBORDINATE'S approach",
       "terms": "Any other terms"
     }
+  },
+  "ES": {
+    "name": "Equity Splits",
+    "file_title": "Equity Splits Process Points",
+    "layout": "process_points",
+    "roles": [
+      "MICHAEL",
+      "PHUC",
+      "GEORG"
+    ],
+    "score_range": [
+      0,
+      5
+    ],
+    "scores": [
+      "TRUST",
+      "RESPECT",
+      "FAIRNESS",
+      "INTERESTS",
+      "FUTURE"
+    ],
+    "form": {
+      "timestamp": "Timestamp",
+      "trio": "TRIO",
+      "obs_first": "OBSERVER: What is your first name",
+      "obs_last": "OBSERVER: What is your last name",
+      "obs_role": "OBSERVER: What was your role",
+      "par_first": "PARTNER: What is the first name",
+      "par_last": "PARTNER: What is the last name",
+      "par_role": "PARTNER: What was the role"
+    }
   }
 }
