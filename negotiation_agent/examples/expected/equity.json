@@ -1,0 +1,339 @@
+{
+  "dropped": "Underwood, Mia",
+  "draft": [
+    {
+      "match": 1,
+      "MICHAEL": [
+        "Ortiz, Lena"
+      ],
+      "PHUC": [
+        "Bennett, Owen"
+      ],
+      "GEORG": [
+        "Brooks, Tyler"
+      ]
+    },
+    {
+      "match": 2,
+      "MICHAEL": [
+        "Dawson, Leah"
+      ],
+      "PHUC": [
+        "Evans, Jordan"
+      ],
+      "GEORG": [
+        "García, Mateo"
+      ]
+    },
+    {
+      "match": 3,
+      "MICHAEL": [
+        "Ibarra, Lucia"
+      ],
+      "PHUC": [
+        "Kowalski, Andy"
+      ],
+      "GEORG": [
+        "Lindqvist, Erik"
+      ]
+    },
+    {
+      "match": 4,
+      "MICHAEL": [
+        "Nguyen, Katherine"
+      ],
+      "PHUC": [
+        "Nakamura, Ren"
+      ],
+      "GEORG": [
+        "Novak, Ben"
+      ]
+    },
+    {
+      "match": 5,
+      "MICHAEL": [
+        "Park, Danielle"
+      ],
+      "PHUC": [
+        "Sato, Hiro"
+      ],
+      "GEORG": [
+        "Shah, Dev"
+      ]
+    },
+    {
+      "match": 6,
+      "MICHAEL": [
+        "Rossi, Gianna"
+      ],
+      "PHUC": [
+        "Thornton, Jack"
+      ],
+      "GEORG": [
+        "Yilmaz, Deniz"
+      ]
+    },
+    {
+      "match": 7,
+      "MICHAEL": [
+        "Mendes, Rafael"
+      ],
+      "PHUC": [
+        "Castellano, Rosa"
+      ],
+      "GEORG": [
+        "Chen, Priya"
+      ]
+    },
+    {
+      "match": 8,
+      "MICHAEL": [
+        "Delgado, Marco"
+      ],
+      "PHUC": [
+        "Fitzgerald, Nora"
+      ],
+      "GEORG": [
+        "Hale, Simone"
+      ]
+    },
+    {
+      "match": 9,
+      "MICHAEL": [
+        "Jensen, Kai"
+      ],
+      "PHUC": [
+        "Laurent, Camille"
+      ],
+      "GEORG": [
+        "Mahoney, Grace"
+      ]
+    },
+    {
+      "match": 10,
+      "MICHAEL": [
+        "Adebayo, Tolu"
+      ],
+      "PHUC": [
+        "O'Neill, Siobhan"
+      ],
+      "GEORG": [
+        "Alvarez, Maya"
+      ]
+    },
+    {
+      "match": 11,
+      "MICHAEL": [
+        "Park, Daniel"
+      ],
+      "PHUC": [
+        "Quinn, Ava",
+        "Walsh, Connor"
+      ],
+      "GEORG": [
+        "Reyes, Noor"
+      ]
+    },
+    {
+      "match": 12,
+      "MICHAEL": [
+        "Hoang, Minh",
+        "Silva, Kai"
+      ],
+      "PHUC": [
+        "Van der Berg, Elise"
+      ],
+      "GEORG": [
+        "Zimmerman, Tess"
+      ]
+    }
+  ],
+  "four_person_teams": [
+    11,
+    12
+  ],
+  "absent": [
+    "Ortiz, Lena",
+    "Novak, Ben",
+    "Castellano, Rosa"
+  ],
+  "moves": [
+    "Silva, Kai moves from team 12 to team 1 as the Michael, because Ortiz, Lena (team 1) is absent; team 12 had two Michaels.",
+    "Walsh, Connor moves from team 11 to team 7 as the Phuc, because Castellano, Rosa (team 7) is absent; team 11 had two Phucs.",
+    "Nguyen, Katherine joins team 3 as a second Michael because Novak, Ben (team 4) is absent and no extra student was left to fill the team; the team just before.",
+    "Nakamura, Ren joins team 3 as a second Phuc because Novak, Ben (team 4) is absent and no extra student was left to fill the team; the team just before."
+  ],
+  "final": [
+    {
+      "match": 1,
+      "MICHAEL": [
+        "Silva, Kai"
+      ],
+      "PHUC": [
+        "Bennett, Owen"
+      ],
+      "GEORG": [
+        "Brooks, Tyler"
+      ]
+    },
+    {
+      "match": 2,
+      "MICHAEL": [
+        "Dawson, Leah"
+      ],
+      "PHUC": [
+        "Evans, Jordan"
+      ],
+      "GEORG": [
+        "García, Mateo"
+      ]
+    },
+    {
+      "match": 3,
+      "MICHAEL": [
+        "Ibarra, Lucia",
+        "Nguyen, Katherine"
+      ],
+      "PHUC": [
+        "Kowalski, Andy",
+        "Nakamura, Ren"
+      ],
+      "GEORG": [
+        "Lindqvist, Erik"
+      ]
+    },
+    {
+      "match": 5,
+      "MICHAEL": [
+        "Park, Danielle"
+      ],
+      "PHUC": [
+        "Sato, Hiro"
+      ],
+      "GEORG": [
+        "Shah, Dev"
+      ]
+    },
+    {
+      "match": 6,
+      "MICHAEL": [
+        "Rossi, Gianna"
+      ],
+      "PHUC": [
+        "Thornton, Jack"
+      ],
+      "GEORG": [
+        "Yilmaz, Deniz"
+      ]
+    },
+    {
+      "match": 7,
+      "MICHAEL": [
+        "Mendes, Rafael"
+      ],
+      "PHUC": [
+        "Walsh, Connor"
+      ],
+      "GEORG": [
+        "Chen, Priya"
+      ]
+    },
+    {
+      "match": 8,
+      "MICHAEL": [
+        "Delgado, Marco"
+      ],
+      "PHUC": [
+        "Fitzgerald, Nora"
+      ],
+      "GEORG": [
+        "Hale, Simone"
+      ]
+    },
+    {
+      "match": 9,
+      "MICHAEL": [
+        "Jensen, Kai"
+      ],
+      "PHUC": [
+        "Laurent, Camille"
+      ],
+      "GEORG": [
+        "Mahoney, Grace"
+      ]
+    },
+    {
+      "match": 10,
+      "MICHAEL": [
+        "Adebayo, Tolu"
+      ],
+      "PHUC": [
+        "O'Neill, Siobhan"
+      ],
+      "GEORG": [
+        "Alvarez, Maya"
+      ]
+    },
+    {
+      "match": 11,
+      "MICHAEL": [
+        "Park, Daniel"
+      ],
+      "PHUC": [
+        "Quinn, Ava"
+      ],
+      "GEORG": [
+        "Reyes, Noor"
+      ]
+    },
+    {
+      "match": 12,
+      "MICHAEL": [
+        "Hoang, Minh"
+      ],
+      "PHUC": [
+        "Van der Berg, Elise"
+      ],
+      "GEORG": [
+        "Zimmerman, Tess"
+      ]
+    }
+  ],
+  "form": {
+    "missing_rating": {
+      "observer": "Ibarra, Lucia",
+      "partner": "Nguyen, Katherine"
+    },
+    "trio_hash": {
+      "observer": "Silva, Kai",
+      "typed": "#1"
+    },
+    "wrong_role": {
+      "observer": "Dawson, Leah",
+      "typed": "Phuc"
+    },
+    "misspelled_partner": {
+      "partner": "Sato, Hiro",
+      "typed": "Sat"
+    },
+    "lowercase": {
+      "observer": "Rossi, Gianna"
+    },
+    "out_of_range": {
+      "observer": "Mendes, Rafael",
+      "partner": "Walsh, Connor",
+      "value": 6
+    },
+    "duplicate": {
+      "observer": "Delgado, Marco",
+      "partner": "Fitzgerald, Nora",
+      "used_trust": 1
+    },
+    "wrong_trio": {
+      "observer": "Jensen, Kai",
+      "typed": "10",
+      "actual": 9
+    },
+    "responses": 80
+  }
+}

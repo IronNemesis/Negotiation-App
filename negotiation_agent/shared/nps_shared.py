@@ -374,11 +374,12 @@ def read_sim_tab(wb, code: str, roles: list[str]) -> SimTab:
     ws = wb[code]
     header_rows = _role_header_rows(ws, roles)
     final = [(r, cells) for r, cells in header_rows if "EMAIL" in cells]
-    draft = [(r, cells) for r, cells in header_rows if "EMAIL" not in cells and "MATCH" in cells]
+    # Her match-number header is MATCH; a three-person simulation's tab may say TRIO instead (as on its Form).
+    draft = [(r, cells) for r, cells in header_rows if "EMAIL" not in cells and ("MATCH" in cells or "TRIO" in cells)]
     if len(final) != 1 or len(draft) != 1:
         raise SkillError("sim_tab_layout",
                          f"The '{code}' tab should have one header row with {' and '.join(roles)} and Email "
-                         f"(the final table) and one with MATCH, {' and '.join(roles)} (the draft table). "
+                         f"(the final table) and one with MATCH, {', '.join(roles)} (the draft table). "
                          f"Found {len(final)} and {len(draft)}.")
     (fr, fcells), (dr, dcells) = final[0], draft[0]
     if dr <= fr:
@@ -414,9 +415,9 @@ def read_sim_tab(wb, code: str, roles: list[str]) -> SimTab:
             raise SkillError("sim_tab_layout", f"On the '{code}' tab, the {role} column in the final table should be "
                                                f"followed by an Email column and a pair-ID column.")
         final_columns.append(rc)
-    match_col = fcells.get("MATCH", 1)
+    match_col = fcells.get("MATCH") or fcells.get("TRIO") or 1
     draft_cols = {r: dcells[r.upper()] for r in roles}
-    draft_match_col = dcells["MATCH"]
+    draft_match_col = dcells.get("MATCH") or dcells["TRIO"]
 
     def is_number(v) -> bool:
         return isinstance(v, (int, float)) or (isinstance(v, str) and v.strip().isdigit())

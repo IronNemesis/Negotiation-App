@@ -68,6 +68,7 @@ class Context:
                                 {"known": sorted(SETTINGS)})
         self.sim = SETTINGS[self.code]
         self.roles = self.sim["roles"]
+        self.max_group = self.sim.get("max_group", MAX_GROUP)
         self.wb = ns.open_workbook(self.roster)
         self.class_tab, self.students, self.class_warnings = ns.read_class_list(self.wb)
         self.tab = ns.read_sim_tab(self.wb, self.code, self.roles)
@@ -146,7 +147,8 @@ def consent_group(ctx, people: list) -> bool | None:
 
 
 def solo_history(wb, current: str, students: list[ns.Student]) -> dict[str, list[str]]:
-    """Who has already been "the 1" in a 1v2: alone on their side of a three-person match, on an earlier tab."""
+    """Who has already had an odd spot on an earlier tab: "the 1" in a 1v2, or an extra in a four-person team.
+    Meeting 5: nobody gets an odd spot twice, in any simulation."""
     out: dict[str, list[str]] = {}
     for code, sim in SETTINGS.items():
         if code == current or code not in wb.sheetnames:
@@ -158,9 +160,8 @@ def solo_history(wb, current: str, students: list[ns.Student]) -> dict[str, list
         if not tab.final_members:
             continue
         for match, members in tab.groups(tab.final_members).items():
-            alone = solo_of(members, sim["roles"])
-            if alone:
-                res = ns.resolve_class_name(alone.name, students, alone.email)
+            for odd in odd_spots(members, sim["roles"]):
+                res = ns.resolve_class_name(odd.name, students, odd.email)
                 if res.confident:
                     out.setdefault(res.student.key, []).append(f"{code}_{match}")
     return out
@@ -175,6 +176,19 @@ def solo_of(people: list, roles: list[str]):
         if len(alone) == 1:
             return alone[0]
     return None
+
+
+def odd_spots(people: list, roles: list[str]) -> list:
+    """The students in an odd spot in a match. With two roles: the "1" in a 1v2 (alone facing two partners). With
+    three roles (Equity Splits): the students sharing a role in a team larger than a trio (an assumption)."""
+    if len(roles) == 2:
+        alone = solo_of(people, roles)
+        return [alone] if alone else []
+    return [p for p in people if sum(q.role == p.role for q in people) > 1]
+
+
+def odd_spot_phrase(ctx) -> str:
+    return ("shares a role in a team larger than a trio" if len(ctx.roles) > 2 else "faces two partners alone")
 
 
 def table_preview(groups: dict[int, list[Person]], roles: list[str], conditions: dict[str, str] | None = None) -> list[dict]:
@@ -197,8 +211,8 @@ def check_groups(ctx: Context, groups: dict[int, list[Person]], absent: list[Per
         for role in ctx.roles:
             if role not in roles:
                 errors.append(f"Match {match} has no {role.title()}.")
-        if len(people) > MAX_GROUP:
-            errors.append(f"Match {match} has {len(people)} students; the most is {MAX_GROUP}.")
+        if len(people) > ctx.max_group:
+            errors.append(f"Match {match} has {len(people)} students; the most is {ctx.max_group}.")
         for p in people:
             if p.key in seen:
                 errors.append(f"{p.name} appears twice: matches {seen[p.key]} and {match}.")
@@ -218,10 +232,10 @@ def check_groups(ctx: Context, groups: dict[int, list[Person]], absent: list[Per
             if draft_roles is not None and p.key in draft_roles and draft_roles[p.key] != p.role:
                 errors.append(f"{p.name} was a {draft_roles[p.key].title()} in the draft and can't become a "
                               f"{p.role.title()}: role packets have already gone out.")
-        alone = solo_of(people, ctx.roles)
-        if alone and ctx.solo.get(alone.key):
-            warnings.append(f"{alone.name} faces two partners alone in match {match} and already did in "
-                            f"{', '.join(ctx.solo[alone.key])}.")
+        for odd in odd_spots(people, ctx.roles):
+            if ctx.solo.get(odd.key):
+                warnings.append(f"{odd.name} {odd_spot_phrase(ctx)} in match {match} and already had an odd spot in "
+                                f"{', '.join(ctx.solo[odd.key])}.")
         for a, b in combinations(people, 2):
             shared = ctx.history.shared_ids(a.key, b.key)
             if shared:
@@ -377,6 +391,124 @@ def draft_with_conditions(ctx: Context, ordered: list[ns.Student]) -> tuple[dict
     return groups, conditions, notes
 
 
+TRIO_COSTS = {"repeat": 1000, "odd_spot_again": 500, "one_gender_team": 10}
+TRIO_RESTARTS = 12
+
+
+def draft_trios(ctx: Context, ordered: list[ns.Student]) -> tuple[dict[int, list[Person]], list[str]]:
+    """Equity Splits (Meeting 5): teams of three cofounders, one per role. There is no base method, so this searches
+    for the teams that best meet her goals, in order:
+    1. nobody is with someone they've already negotiated with (best effort; what's left is a warning);
+    2. nobody gets an odd spot twice: the extra students (one or two, when the class isn't divisible by 3) each
+       join a different team as a second student in a role, the first extra as a Michael, the second as a Phuc;
+    3. each role gets about as many men as women (fixed before the search, which never changes it);
+    4. each team has at least one man and one woman, where possible.
+    The search is deterministic: the same class always gives the same draft."""
+    import random
+
+    roles, n = ctx.roles, len(ordered)
+    teams = n // len(roles)
+    if teams < 1:
+        raise ns.SkillError("too_few_students", f"{ctx.sim['name']} needs at least {len(roles)} students.")
+    gender = {s.key: (ctx.baseline or {}).get(s.key, ("", ""))[0] for s in ordered}
+    # Roles: deal the class, men first, then women, then everyone else, alphabetically, round the roles in order.
+    # Each role gets about the same number of men and women, and the first roles get the extra students.
+    dealt = sorted(ordered, key=lambda s: ({"M": 0, "F": 1}.get(gender[s.key], 2), s.key))
+    by_role = {r: [s for i, s in enumerate(dealt) if i % len(roles) == k] for k, r in enumerate(roles)}
+    # Slots: team t gets one student of each role; an extra slot of role k goes to team (teams - 1 - k).
+    slots = [(t, r) for r in roles for t in range(teams)]
+    slots += [(teams - 1 - k, r) for k, r in enumerate(roles) if len(by_role[r]) > teams]
+    seat = {}
+    for r in roles:
+        for (t, role), s in zip([x for x in slots if x[1] == r], by_role[r]):
+            seat.setdefault((t, role), []).append(s)
+    order = [(t, r, i) for (t, r), ss in seat.items() for i in range(len(ss))]
+    who = [seat[(t, r)][i] for t, r, i in order]   # who[slot] = the student in that slot
+    team_of = [t for t, _, _ in order]
+    role_of = [r for _, r, _ in order]
+    met = {(a.key, b.key) for a, b in combinations(ordered, 2) if ctx.history.shared_ids(a.key, b.key)}
+    met |= {(b, a) for a, b in met}
+    extra_team = {t for t, r in slots[len(roles) * teams:]}
+    in_team = {t: [i for i in range(len(who)) if team_of[i] == t] for t in range(teams)}
+    both_genders = {"M", "F"} <= set(gender.values())
+
+    def team_cost(t: int, who: list) -> int:
+        members = [(who[i], role_of[i]) for i in in_team[t]]
+        cost = sum(TRIO_COSTS["repeat"] for (a, _), (b, _) in combinations(members, 2) if (a.key, b.key) in met)
+        if t in extra_team:
+            for s, r in members:
+                if sum(r == q for _, q in members) > 1 and ctx.solo.get(s.key):
+                    cost += TRIO_COSTS["odd_spot_again"]
+        genders = {gender[s.key] for s, _ in members} & {"M", "F"}
+        if both_genders and len(genders) == 1:
+            cost += TRIO_COSTS["one_gender_team"]
+        return cost
+
+    # Swaps between teams that keep every role's gender balance: two students in the same role, or (checked against
+    # whoever is in the two slots at the time) two of the same gender.
+    swaps = [(i, j) for i, j in combinations(range(len(who)), 2) if team_of[i] != team_of[j]]
+
+    def allowed(i, j, who) -> bool:
+        return role_of[i] == role_of[j] or (gender[who[i].key] == gender[who[j].key] and bool(gender[who[i].key]))
+
+    def climb(who):
+        who = list(who)
+        cost = {t: team_cost(t, who) for t in range(teams)}
+        improved = True
+        while improved:
+            improved = False
+            for i, j in swaps:
+                if not allowed(i, j, who):
+                    continue
+                ti, tj = team_of[i], team_of[j]
+                before = cost[ti] + cost[tj]
+                who[i], who[j] = who[j], who[i]
+                ci, cj = team_cost(ti, who), team_cost(tj, who)
+                if ci + cj < before:
+                    cost[ti], cost[tj], improved = ci, cj, True
+                else:
+                    who[i], who[j] = who[j], who[i]
+        return who, sum(cost.values())
+
+    best, best_cost = climb(who)
+    rng = random.Random(4489)
+    for _ in range(TRIO_RESTARTS):
+        if best_cost == 0:
+            break
+        start = list(best)
+        for _ in range(len(start)):   # shake up the best so far, keeping each role's gender balance
+            i, j = rng.choice(swaps)
+            if allowed(i, j, start):
+                start[i], start[j] = start[j], start[i]
+        candidate, cost = climb(start)
+        if cost < best_cost:
+            best, best_cost = candidate, cost
+    groups = {t + 1: [] for t in range(teams)}
+    for i in sorted(range(len(best)), key=lambda i: (team_of[i], roles.index(role_of[i]), best[i].key)):
+        groups[team_of[i] + 1].append(Person(best[i].name, "", role_of[i], best[i], "exact"))
+    notes = []
+    for t in sorted(extra_team):
+        doubled = [p for p in groups[t + 1] if sum(q.role == p.role for q in groups[t + 1]) > 1]
+        notes.append(f"Team {t + 1} has four students: {doubled[0].role.title()} is shared by "
+                     f"{' and '.join(p.name for p in doubled)}, since the class isn't divisible by {len(roles)}.")
+    if not ctx.baseline:
+        notes.append("Gender isn't on the class list yet (baseline survey), so it wasn't balanced.")
+    return groups, notes
+
+
+def trio_balance(ctx: Context, groups: dict[int, list[Person]]) -> dict:
+    """Men and women in each role, and the teams that aren't mixed."""
+    out = {r: {} for r in ctx.roles}
+    one_gender = []
+    for m, people in sorted(groups.items()):
+        genders = [(ctx.baseline or {}).get(p.key, ("", ""))[0] or "unknown" for p in people]
+        for p, g in zip(people, genders):
+            out[p.role][g] = out[p.role].get(g, 0) + 1
+        if len(set(genders) & {"M", "F"}) == 1 and "unknown" not in genders:
+            one_gender.append(m)
+    return {"by_role": out, "teams_not_mixed": one_gender}
+
+
 def condition_balance(ctx: Context, groups: dict, conditions: dict[str, str]) -> dict:
     """Men and women among research Buyers, and among research Sellers in each condition."""
     buyer_role, seller_role = ctx.roles
@@ -528,6 +660,7 @@ def cmd_draft(args, write: bool = False):
     result = {"ok": True, "simulation": ctx.code, "matches": len(groups), "students": sum(map(len, groups.values())),
               "known_absent": [p.name for p in absent], "draft": table_preview(groups, ctx.roles, conditions),
               **({"condition_balance": condition_balance(ctx, groups, conditions)} if conditions else {}),
+              **({"gender_balance": trio_balance(ctx, groups)} if ctx.sim.get("draft_method") == "best-trios" else {}),
               "placement_notes": notes,
               **({"conditions_note": "Gender and consent aren't on the class list yet (baseline survey), so this "
                                      "draft has no experimental conditions."}
@@ -708,6 +841,100 @@ def propose_final(ctx: Context, args):
     if needs_placement:
         checks["errors"].append("Some stranded students need the instructor to choose a match.")
     return final, all_absent, dropped, moves, needs_placement, checks, draft_roles, conds
+
+
+def rearrange_trios(ctx: Context, groups, remaining, final, absent_keys, placements, dropped):
+    """Equity Splits absences (Meeting 5). A team that still has every role stays as it is. Otherwise, in team order:
+    1. Each missing role is filled by an extra student with that role from a four-person team (the nearest one).
+    2. With more absences than extras, a team still missing a role is merged: with another incomplete team if
+       together they have every role (assumption), otherwise each student joins the team just before in their role
+       (her usual rule; the next one if there's none).
+    Anything that would repeat a partner, give someone a second odd spot, or make a team too big is hers to place."""
+    moves, needs_placement = [], []
+    roles = ctx.roles
+    broken = sorted(set(remaining) - set(final))
+
+    def reason_absent(m):
+        gone = [p for p in groups[m] if p.key in absent_keys]
+        why = "is no longer on the class list" if gone and all(p in dropped for p in gone) else "is absent"
+        return f"{', '.join(p.name for p in gone)} (team {m}) {why}" if len(gone) == 1 else \
+            f"{', '.join(p.name for p in gone)} (team {m}) are absent"
+
+    def missing(people):
+        return [r for r in roles if not any(p.role == r for p in people)]
+
+    def problem(people, p):
+        if len(people) + 1 > ctx.max_group:
+            return f"that team would have more than {ctx.max_group} students"
+        if any(ctx.history.shared_ids(p.key, q.key) for q in people):
+            return "that team would repeat a partner from an earlier simulation"
+        odd = [q for q in odd_spots(people + [p], roles) if ctx.solo.get(q.key)]
+        if odd:
+            return f"{odd[0].name} would have an odd spot again (already in {', '.join(ctx.solo[odd[0].key])})"
+        return None
+
+    # Students she placed herself go first.
+    for m in broken:
+        for p in list(remaining[m]):
+            if p.key in placements:
+                target = placements[p.key]
+                final[target].append(p)
+                remaining[m].remove(p)
+                moves.append(f"{p.name} joins team {target} as a {p.role.title()} because {reason_absent(m)}; placed "
+                             "by the instructor.")
+    # 1. Fill missing roles with extras from four-person teams.
+    for m in broken:
+        team = remaining[m]
+        if not team:
+            continue
+        for role in missing(team):
+            donors = sorted((t for t, ps in final.items() if sum(p.role == role for p in ps) > 1),
+                            key=lambda t: (abs(t - m), t))
+            for t in donors:
+                candidates = [p for p in reversed(final[t]) if p.role == role and not problem(team, p)
+                              and len(team) < ctx.max_group]
+                if candidates:
+                    p = candidates[0]
+                    final[t].remove(p)
+                    team.append(p)
+                    moves.append(f"{p.name} moves from team {t} to team {m} as the {role.title()}, because "
+                                 f"{reason_absent(m)}; team {t} had two {role.title()}s.")
+                    break
+        if not missing(team):
+            final[m] = team
+    # 2a. Merge two incomplete teams that together have every role.
+    left = [m for m in broken if m not in final and remaining[m]]
+    for m in list(left):
+        if m not in left:
+            continue
+        for other in left:
+            combined = remaining[m] + remaining[other]
+            if other != m and not missing(combined) and len(combined) <= ctx.max_group and \
+                    not any(ctx.history.shared_ids(a.key, b.key) for a in remaining[m] for b in remaining[other]):
+                first, second = sorted((m, other))
+                final[first] = combined
+                moves += [f"{p.name} joins team {first} as a {p.role.title()}: {reason_absent(second)}, and team "
+                          f"{first} was missing that role." for p in remaining[second]]
+                left.remove(m)
+                left.remove(other)
+                break
+    # 2b. Otherwise her usual rule: the team just before, in the same role.
+    for m in left:
+        for p in remaining[m]:
+            earlier, later = [x for x in final if x < m], [x for x in final if x > m]
+            target = max(earlier) if earlier else (min(later) if later else None)
+            if target is None:
+                raise ns.SkillError("no_match_left", "No complete team is left to join.")
+            trouble = problem(final[target], p)
+            if trouble:
+                needs_placement.append({"student": p.name, "from_match": m, "suggested_match": target,
+                                        "reason": trouble})
+                continue
+            final[target].append(p)
+            how = "the team just before" if earlier else "the next team, since there is no earlier one"
+            moves.append(f"{p.name} joins team {target} as a second {p.role.title()} because {reason_absent(m)} and "
+                         f"no extra student was left to fill the team; {how}.")
+    return moves, needs_placement, []
 
 
 def join_previous(ctx: Context, groups, remaining, final, absent_keys, placements, dropped):

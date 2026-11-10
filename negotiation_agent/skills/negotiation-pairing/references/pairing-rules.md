@@ -45,6 +45,30 @@ Every placement decision is in `placement_notes`. Repeats the rotation can't avo
 
 **Writing:** names go into the draft table's numbered rows, starting at the first. A second same-role student goes on the next row with no match number. Unused numbered rows are cleared.
 
+## Drafting (Equity Splits, tab `ES`)
+
+Three cofounder roles: Michael, Phuc, Georg (the role names on her process points sheet). There is no base method (Meeting 5), so the script searches for the best teams.
+
+1. Take the class list, minus students she named as absent.
+2. **Roles:** sort the class men first, then women, then anyone else, alphabetically within each, and deal them round the roles in order. Each role gets about as many men as women, and with 1 or 2 left over, Michael and then Phuc get the extra students.
+3. **Teams:** one student of each role per team. An extra student is a second student in their role, in a different team for each extra (the last teams). So with 2 left over there are two four-person teams.
+4. **Search:** students are swapped between teams (same role, or same gender across roles, so the role balance never changes) to lower, in order of weight:
+   - repeat partners from any earlier tab (best effort: what can't be avoided is a warning);
+   - an extra who already had an odd spot (the "1" in a 1v2, or an extra in a four-person team) on an earlier tab;
+   - teams of only men or only women.
+5. The search is deterministic (fixed restarts and seed), so the same class gives the same teams.
+6. Swaps (`--swap`) work as for Used Car.
+
+**Odd spots.** Meeting 5: nobody gets an odd spot twice, in any simulation. With two roles, the odd spot is the "1" in a 1v2. With three roles, it is sharing a role in a team larger than a trio. *(Assumption.)*
+
+## Absences (Equity Splits)
+
+1. Absent students get `ES_0`.
+2. A team that still has every role stays as it is (a four-person team that loses its extra is a trio again).
+3. In team order, each missing role is filled by an extra with that role from a four-person team, the nearest one first, as long as it repeats no partner.
+4. With more absences than extras, a team still missing a role is merged: with another incomplete team if together they have every role, otherwise each student joins the team just before in their role (the next one if there's none). *(Assumption about which.)*
+5. A move that would repeat a partner, give someone a second odd spot, or make a team of more than five is hers to decide (`--place`).
+
 ## Absences (her rule)
 
 1. Absent students leave their match and get `<code>_0`. A drafted student who is no longer on the class list dropped the class: they are treated as absent this week, even if she doesn't name them, and simply aren't on the class list for later simulations. Their earlier pair IDs still count as history.

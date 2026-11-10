@@ -1,6 +1,6 @@
 ---
 name: negotiation-pairing
-description: Drafts student matches for an in-class negotiation simulation (currently the Used Car buyer/seller negotiation) in the instructor's own roster workbook, using her alphabetical method and her UC_1-style pair IDs; builds the BCC email lists for sending each role its packet; and on class day applies absences (UC_0, stranded partners join the previous match) and writes the final matches. Warns about repeat partners from earlier simulations. Use this skill whenever the instructor asks to pair, partner, match, or set up students for a negotiation, draft the matches, prepare role emails or BCC lists, says who is absent on a negotiation day, asks to update or check the matches on a simulation tab, or wants gender and consent recorded from the baseline survey, even if she doesn't name the skill.
+description: Drafts student matches for an in-class negotiation simulation (the Used Car buyer/seller negotiation, the Salary negotiation, and the three-cofounder Equity Splits negotiation) in the instructor's own roster workbook, using her alphabetical method and her UC_1-style pair IDs; builds the BCC email lists for sending each role its packet; and on class day applies absences (UC_0, stranded partners join the previous match) and writes the final matches. Warns about repeat partners from earlier simulations. Use this skill whenever the instructor asks to pair, partner, match, or set up students for a negotiation, draft the matches, prepare role emails or BCC lists, says who is absent on a negotiation day, asks to update or check the matches on a simulation tab, wants Equity Splits trios, or wants gender and consent recorded from the baseline survey, even if she doesn't name the skill.
 ---
 
 # Negotiation Pairing
@@ -66,6 +66,8 @@ For Used Car, the draft uses her method: the class sorted alphabetically, the fi
 
 For the salary negotiation (`--simulation SL`), it uses her rotation: everyone keeps their Used Car side (Buyers on the left as Supervisors, Sellers on the right as Subordinates), and the right column moves down one, with the bottom student going to the top. Explain any `placement_notes` (students who changed side, or where the extra student went) in a line each. A repeat partner the rotation couldn't avoid shows as a warning: offer a swap to fix it.
 
+For Equity Splits (`--simulation ES`, three cofounders: Michael, Phuc, Georg), there is no fixed method, so the script searches for the best teams of three against her goals, in this order: nobody with someone they've already negotiated with; nobody in an odd spot twice; each role about evenly men and women (`gender_balance.by_role`); each team mixed (`gender_balance.teams_not_mixed` lists any that aren't). When the class isn't divisible by 3, one or two teams have four students (two sharing a role); `placement_notes` names them. The same class always gives the same teams. A repeat it couldn't avoid shows as a warning: offer a swap.
+
 One effect to explain if it comes up: leaving out a student known to be absent shifts the halves, so the pairs after that point in the alphabet change. That is how her method works, not a mistake.
 
 **Experimental conditions (Used Car only).** Once gender and consent are on the class list (T12 above), the Used Car draft also gives each **Seller** a condition, `I` (intervention) or `C` (control). Buyers have no condition: there is one Buyer packet.
@@ -129,6 +131,12 @@ This writes nothing. It applies her rule:
 - A partner left without anyone in the other role joins the match just before theirs, in the same role.
 - With conditions, they stay with students in the same research-consent group where possible (with consent, or without), and Gender and Intervention (each Seller's condition) are filled in on the final table.
 - Match numbers keep their gaps; nobody's role changes.
+
+For Equity Splits the rule is different (Meeting 5):
+- A team that still has every role stays as it is.
+- A team missing a role gets the extra student with that role from a four-person team (the nearest one).
+- With more absences than extras, a team still missing a role is merged: with another incomplete team if together they have every role, otherwise into the team just before.
+- Explain each `moves` line in plain words; they say which team each student came from and why.
 
 Results that need her answer:
 - **`absence_unclear`:** a name fits more than one student or no one. Ask with the suggestions.

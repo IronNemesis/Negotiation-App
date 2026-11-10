@@ -22,5 +22,16 @@
     "draft_method": "rotate-second-half",
     "rotate_from": "UC",
     "first_of_term": false
+  },
+  "ES": {
+    "name": "Equity Splits",
+    "roles": [
+      "MICHAEL",
+      "PHUC",
+      "GEORG"
+    ],
+    "draft_method": "best-trios",
+    "max_group": 5,
+    "first_of_term": false
   }
 }

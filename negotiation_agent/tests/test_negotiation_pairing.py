@@ -476,6 +476,72 @@ def test_repeat_partners_are_warned_for_the_next_simulation():
     assert len(repeats) == 1 and "UC_2" in repeats[0] and "Alvarez, Maya" in repeats[0]
 
 
+ES_PREPARED = "BUS 4489 F26 Roster - Equity Splits prepared.xlsx"
+EQUITY = json.loads((EXAMPLES / "expected" / "equity.json").read_text(encoding="utf-8"))
+ES_ROLES = ["MICHAEL", "PHUC", "GEORG"]
+
+
+def es_workspace() -> Path:
+    tmp = Path(tempfile.mkdtemp())
+    shutil.copy(EXAMPLES / ES_PREPARED, tmp / ES_PREPARED)
+    return tmp
+
+
+def test_equity_draft_balances_gender_and_avoids_repeat_partners():
+    folder = es_workspace()
+    result = run(folder, "draft", "--roster", ES_PREPARED, "--simulation", "ES")
+    assert result["ok"] and not result["errors"] and not result["warnings"], result   # no repeats, no 2nd odd spot
+    assert result["students"] == 38 and result["matches"] == 12   # 38 = 12 trios + 2 extras
+    sizes = {m["match"]: sum(len(m[r]) for r in ES_ROLES) for m in result["draft"]}
+    four = [m for m, n in sizes.items() if n == 4]
+    assert len(four) == 2 and all(n == 3 for m, n in sizes.items() if m not in four)
+    doubled = {r for m in result["draft"] if m["match"] in four for r in ES_ROLES if len(m[r]) == 2}
+    assert doubled == {"MICHAEL", "PHUC"}   # the two extras take different roles
+    for role, counts in result["gender_balance"]["by_role"].items():
+        assert abs(counts.get("M", 0) - counts.get("F", 0)) <= 1, (role, counts)
+    assert result["gender_balance"]["teams_not_mixed"] == []
+    assert result["draft"] == run(folder, "draft", "--roster", ES_PREPARED, "--simulation", "ES")["draft"]  # repeatable
+    assert result["draft"] == EQUITY["draft"]
+
+
+def test_equity_draft_finds_the_only_teammates_left():
+    folder = es_workspace()
+    wb = load_workbook(folder / ES_PREPARED)   # make everyone a former partner of Ortiz, Lena except two students
+    ws = wb["SL"]
+    names = [c.value for c in wb["Att - Fall"]["B"] if isinstance(c.value, str) and "," in c.value]
+    for i, name in enumerate(n for n in names if n not in ("Ortiz, Lena", "Bennett, Owen", "Brooks, Tyler")):
+        ws.cell(60 + i, 2).value, ws.cell(60 + i, 5).value = "Ortiz, Lena", f"SL_{90 + i}"
+        ws.cell(60 + i, 6).value, ws.cell(60 + i, 9).value = name, f"SL_{90 + i}"
+    wb.save(folder / ES_PREPARED)
+    result = run(folder, "draft", "--roster", ES_PREPARED, "--simulation", "ES")
+    assert result["ok"] and not result["errors"]
+    team = next(m for m in result["draft"] if "Ortiz, Lena" in sum((m[r] for r in ES_ROLES), []))
+    # The only two students she hasn't negotiated with end up in her team, so nothing is repeated.
+    assert set(sum((team[r] for r in ES_ROLES), [])) == {"Ortiz, Lena", "Bennett, Owen", "Brooks, Tyler"}, team
+    assert not result["warnings"], result["warnings"]
+
+
+def test_equity_absences_use_the_extras_then_merge():
+    folder = es_workspace()
+    assert run(folder, "write-draft", "--roster", ES_PREPARED, "--simulation", "ES")["ok"]
+    absent = sum((["--absent", a] for a in EQUITY["absent"]), [])
+    proposal = run(folder, "absences", "--roster", ES_PREPARED, "--simulation", "ES", *absent)
+    assert proposal["ok"] and not proposal["errors"], proposal
+    assert proposal["moves"] == EQUITY["moves"]
+    assert sum("moves from team" in m for m in proposal["moves"]) == 2   # both extras fill a team
+    assert sum("no extra student was left" in m for m in proposal["moves"]) == 2   # the third team is merged
+    assert proposal["matches"] == 11 and all(set(m) >= set(ES_ROLES) for m in proposal["final"])
+    final = run(folder, "write-final", "--roster", ES_PREPARED, "--simulation", "ES", *absent, "--accept-warnings")
+    assert final["ok"], final
+    tab = ns.read_sim_tab(load_workbook(folder / ES_PREPARED), "ES", ES_ROLES)
+    assert sorted(m.name for m in tab.absent) == sorted(EQUITY["absent"])
+    assert {m.pair_id for m in tab.absent} == {"ES_0"}
+    ws = load_workbook(folder / ES_PREPARED)["ES"]
+    first = tab.final_header + 1   # earlier pair IDs are filled in next to each name
+    assert ws.cell(first, 4).value.startswith("UC_") and ws.cell(first, 5).value.startswith("SL_")
+    bcc = run(folder, "bcc", "--roster", ES_PREPARED, "--simulation", "ES")
+    assert set(bcc["lists"]) == set(ES_ROLES) and sum(v["count"] for v in bcc["lists"].values()) == 35
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in list(globals().items()):
