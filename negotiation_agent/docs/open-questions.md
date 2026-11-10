@@ -1,6 +1,6 @@
 # Open Questions
 
-The workflow is built from four meetings and her files: her roster workbook, Used Car and Salary Qualtrics exports, her finished Used Car bargaining range sheet, her Salary outcomes sheet and in-class Google Form export, and a Week 1 baseline survey export with its codebook. Each item below is an assumption in the current design that still needs her confirmation. The **Affects** column shows which task specifications change if her answer differs.
+The workflow is built from five meetings and her files: her roster workbook, Used Car and Salary Qualtrics exports, her finished Used Car bargaining range sheet, her Salary outcomes sheet and in-class Google Form export, a Week 1 baseline survey export with its codebook, and her finished Week 4 Equity Splits process points sheet. Each item below is an assumption in the current design that still needs her confirmation. The **Affects** column shows which task specifications change if her answer differs.
 
 ## To Ask the Instructor
 
@@ -9,15 +9,19 @@ The workflow is built from four meetings and her files: her roster workbook, Use
 | When does she fill in the final (top) table on a simulation tab: at drafting time, or only after absences? | The draft goes in the bottom `MATCH` table; the top table is written at the in-class absence step, even when nobody is absent. | T4, T9 |
 | Found while building: with the Salary rotation (right column down one), the "join the match before" rule always puts a stranded Subordinate back with their Used Car partner, because the match before holds exactly that partner. Today the skill then asks her where the student goes. Is this the "once we start moving forward" exception, and what should happen instead (for example, the match after, or pairing two stranded students)? | She is asked to place the student each time. | T9 |
 | Meeting 3 confirmed that a stranded student joins the previous match, "except once we start moving forward." What does that exception mean: once negotiations have started in class, in later simulations, or something else? And when it applies, should two stranded students in opposite roles be paired with each other? | Each stranded student joins the previous match in the same role, in every simulation. | T9 |
-| Salary: what is the base salary used to turn a raise into a total salary? | $60,000 (most Form answers). Some say $63,000 or $63,500; one mentions keeping a $3,500 bonus. | Salary sheet |
-| Salary: how do we tell a raise from a total salary in what students type? | A number under $40,000 is a raise and gets the base added; $40,000 or more is already a total. The original answer stays in a cell comment. | Salary sheet |
 | Salary: targets come from both the Qualtrics survey and the in-class Form. Which wins? | Qualtrics (the white columns); the Form's targets stay on the `Form` tab. | Salary sheet |
 | Salary: duplicate Form rows (both partners submitted) and duplicate Qualtrics responses. | The latest submission is used and the summary says so. | Salary sheet |
-| Conditions: balance I/C within each role, or across the whole class? | Within each role, as far as the method allows. | UC drafting |
-| Conditions: how do "first half / second half," gender balance, and same-condition matching fit together? | Within each gender, alphabetically, the first half is I and the second half C. Within each condition, her usual method: first half Buyers, second half Sellers. | UC drafting |
-| Conditions: where should each match's I/C go at drafting time, before the final table exists? | A `CONDITION` column next to the draft table. | UC drafting |
+| Conditions: where should each Seller's I/C go at drafting time, before the final table exists? | A `CONDITION` column next to the draft table, on the Seller's row. | UC drafting |
 | Conditions: when two stranded students who both declined consent have the same role, should Claude swap one's role and pair them (allowed in Meeting 4), or place them as usual? | Placed as usual; the role swap isn't built yet. | T9 |
-| Conditions: which condition do students who declined consent get? | They are paired with each other first and take whichever condition keeps the groups even. | UC drafting |
+| Equity Splits: what does the tangible-outcomes sheet look like (Aidan is asking her)? | Not built yet; only the process points sheet is. | ES outcomes sheet |
+| Where does she want the yellow highlight for students who didn't fill out the survey or Form (Aidan is asking her again)? | On the process points sheet's `By Student` tab: a student who hasn't rated every teammate is yellow. | ES sheet, maybe UC and SL |
+| Equity Splits: when the class isn't divisible by 3, which role do the extra students double? | Michael first, then Phuc, each in a different team. | ES drafting |
+| Equity Splits: what counts as an "odd spot" for the "nobody twice" rule in a four-person team? | The two students who share a role. Nobody gets an odd spot (the "1" in a 1v2, or an extra in a four-person team) twice in the term. | ES drafting, T9 |
+| Equity Splits: when a trio left with two people is merged, does it merge with another broken team, or join the team before? | With another incomplete team if together they have every role; otherwise into the team just before (her usual rule). | ES T9 |
+| Equity Splits: does her `ES` tab use `MATCH` as the header (as on `UC`/`SL`), or `TRIO` like the Form? | Either is accepted. | ES tab |
+| Used Car: which packet do Sellers who declined consent get? | The control packet, so they're on the `SELLER-C` list, named in a note. | UC BCC lists |
+| Used Car: after an absence, should a stranded student stay with students in the same consent group (with or without consent)? | Yes where possible; otherwise the match just before in the same role. | T9 |
+| Equity Splits process points: sorted by trio, then by the person assessed (hers is by trio, in no fixed order within it). Is that OK? | Yes. | ES sheet |
 | Is attendance in `Att - Fall` filled in after class? Could it ever be the source for absences? | Filled in after class; absences come from her in the chat. | H5 |
 | Meeting 3: she brings a running list of questions to class for students to answer. Is that how she fills in answers for students who missed the survey, and should she be able to type those answers into the chat for the sheet? | Students not in the export get a blank row with a "No survey response" comment; she fills them in by hand. | T7, T8 |
 | Does she ever change a student's survey answer by hand (her Week 2 sheet has one initial offer that differs from Qualtrics), and from what source? | The skill copies the export exactly, apart from the documented cleaning rules. | T6 |
@@ -25,7 +29,6 @@ The workflow is built from four meetings and her files: her roster workbook, Use
 | The day-of path (building the whole bargaining range sheet in class from the final matches): does it replace the before-class build, or is it an option alongside it? | An option: she can still build from the draft before class, or skip that and build once from the final matches in class. | T8, workflow Stage 2 and 3 |
 | Absent students on the bargaining range sheet: should their rows include their survey answers if they submitted them, and should they carry `UC_0` or a label like "Absent"? | Listed in a separate block below the matches, labeled "Absent", with their survey answers if they gave them. | T8 |
 | The Qualtrics name dropdown: will it list names as `Last, First` (as on her class list)? Does she still want the email question in the survey? | `Last, First`, generated by the skill from the class list for her to paste into Qualtrics; email stays optional. | T6, T7, H4 |
-| Late adds: her UC draft placed two students who joined late at the end instead of in alphabetical order. Should late adds always go at the end? | Strictly alphabetical, as decided; she can swap students in review. | T2 |
 | Her UC draft lists a student by one first name and the final table and class list by another (a legal vs. preferred name). Which name should the skills write on new tabs? | The class-list name is written; other variants are linked when confident and otherwise reported for her to confirm. | T1, T4, T9 |
 | Are the proposed time target (about 5 minutes per simulation) and highlight colors (orange for corrected typos, light red for unclear answers) acceptable to her? | Yes. | README, T6, T8 |
 
@@ -56,10 +59,21 @@ The workflow is built from four meetings and her files: her roster workbook, Use
 | Salary sheet layout is her template: yellow columns come from the in-class Form, white columns from the Qualtrics survey before class. Each side has both an INITIAL OFFER (planned, Qualtrics) and an ACTUAL INITIAL (spoken in class, Form). | Meeting 4 |
 | Salary sheet: every money value shown as a total salary, formatted with $ and commas for a cleaner look. | Meeting 4 |
 | Used Car doesn't use the Google Form: she fills ACTUAL IO and OUTCOME by hand during the same-day debrief. | Meeting 4 |
-| Experimental conditions (I/C) are assigned per student for Used Car only, about half of the women and half of the men in each. Students in the same condition are matched together; intervention students get different role packets, so there are four BCC lists (Buyer-I, Buyer-C, Seller-I, Seller-C). | Meeting 4 |
-| I/C is kept in mind after absences: a stranded student joins the nearest earlier match in the same condition, or she is asked. | Meeting 4 |
+| Experimental conditions (I/C) are for Used Car only, about half of the women and half of the men in each. (Meeting 5 narrowed this to Sellers, below.) | Meeting 4 |
 | Students who declined consent are paired together where possible; their roles may be swapped to make that work. | Meeting 4 |
 | The baseline survey (Week 1, number codes) is read once to record Gender and Consent on the class list, in two columns just after Email. A student who didn't take it counts as declined; a student who chose "Other" for gender is excluded from the research. Only gender and consent for now; the full codebook dataset and Prolific come later. | Meeting 4 |
+| Only Used Car Sellers get a condition (no intervention Buyers), so there are three BCC lists: Buyer, Seller-I, Seller-C. Within each gender, alphabetically, the first half of the Sellers are I and the second half C. | Meeting 5 |
+| Buyers are also balanced by gender, though it matters less than for Sellers. | Meeting 5 |
+| The alphabetical assumptions are confirmed: the I/C split within each gender, her first-half Buyers method, and late adds sorted strictly alphabetically. | Meeting 5 |
+| Conditions don't decide roles. | Meeting 5 |
+| Students who declined consent are still matched with each other first. As Sellers they get no condition (they opted out of the research). | Meeting 5 |
+| Salary: from next term students always type a total salary, in every survey and the Form. The raise conversion stays as a fallback. | Meeting 5 |
+| Equity Splits (tab `ES`) is the next simulation: three cofounders, no experimental condition. | Meeting 5 |
+| Equity Splits trios: nobody with someone they've already negotiated with (best effort, with a warning), each role about evenly men and women, and each trio mixed where possible. No base method. | Meeting 5 |
+| Equity Splits: with 2 left over there are two four-person teams. If there are absences, the extra students move to teams with absent students; with more absences than extras, a trio left with two people is merged. Absent students get `ES_0`. | Meeting 5 |
+| Nobody is in an odd spot twice: this is a rule for all simulations. | Meeting 5 |
+| Equity Splits process points: each student rates each teammate in a Google Form in class (Trust, Respect, Fairness, Interests, Future, 0–5). She builds the finished sheet in class. | Meeting 5, her Week 4 sheet |
+| The earlier simulation tabs are the full partner history. | Meeting 5 |
 | Two skills: `negotiation-pairing` and `bargaining-range-sheet`. | Aidan |
 | Her real files are used for local testing only and never committed to the public repo. | Aidan |
 | A stranded student joins the previous match in the same role (with an exception still to be clarified, above). | Meeting 3 |

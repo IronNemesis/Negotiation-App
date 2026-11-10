@@ -10,7 +10,8 @@
     "conditions": [
       "I",
       "C"
-    ]
+    ],
+    "condition_role": "SELLER"
   },
   "SL": {
     "name": "Salary negotiation",

@@ -93,7 +93,7 @@ What to tell her:
 - **The Form notes:** a match number typed wrong and placed by the names, or a pair that submitted twice (the latest is used).
 - **Cells to look at:** `form.cleaning.mismatch` (a total that isn't base + raise), out-of-range numbers, and unclear answers.
 - **Students without a survey response** (`no_response`).
-- **The assumptions** (`assumptions`), in one line: every amount is shown as a total salary, and a number under $40,000 is read as a raise on a $60,000 base. Both are still being confirmed with her.
+- **Raises:** from next term, students will type a total salary everywhere (Meeting 5), so this rarely applies. As a fallback, a number under $40,000 is still read as a raise on a $60,000 base (`assumptions`); if any were converted, say so in one line.
 
 Unresolved items:
 - **`form_row`:** a Form row whose match number and names don't point to one match. Ask which match it belongs to, then pass `--form-match "ROW=MATCH"` (or `--form-skip ROW` to leave it out). ROW is the row number in the CSV.

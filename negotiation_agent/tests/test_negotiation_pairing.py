@@ -386,59 +386,71 @@ def test_without_the_baseline_the_draft_has_no_conditions():
     assert all("condition" not in m for m in result["draft"])
 
 
-def test_conditions_draft_balances_gender_and_pairs_decliners():
+def test_conditions_draft_gives_only_sellers_a_condition():
     folder = conditions_workspace()
     result = run(folder, "draft", "--roster", BEFORE)
     assert result["ok"] and not result["errors"], result
     assert result["students"] == 39
-    labels = [m["condition"] for m in result["draft"]]
-    assert set(labels) == {"I", "C"} and labels == sorted(labels, key=["I", "C"].index)   # numbered I, then C
     consent = {n: c for n, (_, c) in BASELINE["students"].items()}
-    for m in result["draft"]:   # students without consent are only ever matched with each other
+    genders = {n: g for n, (g, _) in BASELINE["students"].items()}
+    for m in result["draft"]:   # students without consent are only ever matched with each other, without a condition
         people = m["BUYER"] + m["SELLER"]
-        assert len({consent[n] == "Yes" for n in people}) == 1, m
-    for condition in ("I", "C"):   # within each role, men and women are split about evenly between I and C
-        for role in ("BUYER", "SELLER"):
-            counts = result["condition_balance"][condition][role]
-            assert abs(counts.get("M", 0) - counts.get("F", 0)) <= 1, (condition, role, counts)
-    for role in ("BUYER", "SELLER"):
-        for gender in ("M", "F"):
-            i = result["condition_balance"]["I"][role].get(gender, 0)
-            c = result["condition_balance"]["C"][role].get(gender, 0)
-            assert abs(i - c) <= 1, (role, gender, i, c)
+        research = {consent[n] == "Yes" for n in people}
+        assert len(research) == 1, m
+        assert m["condition"] in (("I", "C", "I/C", "C/I") if research == {True} else ("",)), m
+    decliner_matches = [m["match"] for m in result["draft"] if m["condition"] == ""]
+    assert decliner_matches == [18, 19]   # after the research matches
+    balance = result["condition_balance"]
+    assert set(balance) == {"BUYER", "SELLER-I", "SELLER-C"}
+    for gender in ("M", "F"):   # Sellers split evenly between I and C within each gender
+        assert abs(balance["SELLER-I"].get(gender, 0) - balance["SELLER-C"].get(gender, 0)) <= 1, balance
+        sellers = balance["SELLER-I"].get(gender, 0) + balance["SELLER-C"].get(gender, 0)
+        assert abs(balance["BUYER"].get(gender, 0) - sellers) <= 1, balance   # Buyers balanced by gender too
     written = run(folder, "write-draft", "--roster", BEFORE)
     assert written["ok"], written
     ws = load_workbook(folder / BEFORE)["UC"]
     tab = uc_tab(folder / BEFORE)
     assert ws.cell(tab.draft_header, 4).value == "CONDITION"
-    assert [ws.cell(tab.draft_header + 1 + i, 4).value for i in range(2)] == ["I", "I"]
+    for m in tab.draft_members:   # the CONDITION column holds the Seller's condition on that row
+        value = ws.cell(m.row, 4).value
+        if m.role == "SELLER":
+            assert value == (None if consent[m.name] != "Yes" else value) and (value in ("I", "C")) == (consent[m.name] == "Yes"), m
+        elif not any(o.row == m.row and o.role == "SELLER" for o in tab.draft_members):
+            assert value is None, m
     bcc = run(folder, "bcc", "--roster", BEFORE)
-    assert set(bcc["lists"]) == {"BUYER-I", "BUYER-C", "SELLER-I", "SELLER-C"}
+    assert set(bcc["lists"]) == {"BUYER", "SELLER-I", "SELLER-C"}
     assert sum(v["count"] for v in bcc["lists"].values()) == 39
+    assert any("declined the research" in n and "SELLER-C" in n for n in bcc["notes"])
+    assert genders  # (used above through consent)
 
 
-def test_absences_stay_within_the_condition_and_fill_gender_and_intervention():
+def test_absences_keep_consent_groups_and_fill_gender_and_intervention():
     folder = conditions_workspace()
     assert run(folder, "write-draft", "--roster", BEFORE)["ok"]
     draft = {m["match"]: m for m in run(folder, "draft", "--roster", BEFORE)["draft"]}
-    first_c = min(m for m, d in draft.items() if d["condition"] == "C")
-    absent = draft[first_c]["BUYER"][0]   # the first C match has no earlier C match: its Seller goes to the next one
+    absent = draft[1]["BUYER"][0]   # match 1 has no earlier match: its Seller goes to the next one
     proposal = run(folder, "absences", "--roster", BEFORE, "--absent", absent)
     assert proposal["ok"] and not proposal["errors"], proposal
-    assert any(f"joins match {first_c + 1}" in m and "in condition C" in m for m in proposal["moves"])
+    assert any("joins match 2" in m for m in proposal["moves"]), proposal["moves"]
+    # A student without consent stays with students without consent: the first decliners' match has no earlier one,
+    # and the next one is full, so she is asked rather than the student joining a research match.
+    stranded = run(folder, "absences", "--roster", BEFORE, "--absent", draft[18]["BUYER"][0])
+    assert [s["suggested_match"] for s in stranded["needs_placement"]] == [19], stranded
     final = run(folder, "write-final", "--roster", BEFORE, "--absent", absent)
     assert final["ok"], final
     ws = load_workbook(folder / BEFORE)["UC"]
     tab = uc_tab(folder / BEFORE)
     genders = {n: g for n, (g, _) in BASELINE["students"].items()}
+    consent = {n: c for n, (_, c) in BASELINE["students"].items()}
     rows = [r for r in range(2, tab.draft_header) if ws.cell(r, 2).value or ws.cell(r, 6).value]
     for r in rows:
         for name_col, gender_col in ((2, 5), (6, 9)):
             if ws.cell(r, name_col).value:
                 assert (ws.cell(r, gender_col).value or "") == genders[ws.cell(r, name_col).value], r
-        assert ws.cell(r, 10).value in ("I", "C"), r
+        seller = ws.cell(r, 6).value
+        assert (ws.cell(r, 10).value in ("I", "C")) == bool(seller and consent[seller] == "Yes"), r
     absent_row = next(r for r in rows if absent in (ws.cell(r, 2).value, ws.cell(r, 6).value))
-    assert ws.cell(absent_row, 4).value == "UC_0" and ws.cell(absent_row, 10).value == "C"
+    assert ws.cell(absent_row, 4).value == "UC_0" and ws.cell(absent_row, 10).value is None
 
 
 def test_roles_are_locked_after_emails_go_out():

@@ -19,17 +19,17 @@
 
 ## Experimental Conditions (Used Car, once gender and consent are recorded)
 
-These are assumptions from Meeting 4, to confirm with her.
+Meeting 5: only Sellers have a condition (there are no intervention Buyers).
 
-1. Students whose Consent isn't `Yes` (`No`, `No (no survey)`, `Excluded`) are matched only with each other, by her alphabetical method. A lone one joins the smaller condition.
-2. Everyone else is split by gender. Within each gender, alphabetically, the first half is `I` and the second half `C`. An odd one out goes to `I` for the first gender and to `C` for the next, so the totals stay even.
-3. Within each condition, her method applies: first half Buyers, second half Sellers, matched in order. The extra student is placed as in step 4 above.
-4. Matches are numbered with all `I` matches first, then `C`. Each match of students without consent takes the condition with fewer students.
+1. Students whose Consent isn't `Yes` (`No`, `No (no survey)`, `Excluded`) are matched only with each other, by her alphabetical method. They have no condition, even as Sellers. Their matches are numbered after the others. A lone one is matched with research students, without a condition.
+2. Everyone else is split by gender. Within each gender, alphabetically, the first half are Buyers and the second half Sellers. An odd one out goes to the Sellers for the first gender and to the Buyers for the next, so the roles stay even.
+3. Sellers: within each gender, alphabetically, the first half are `I` and the second half `C`, with odd ones out alternating the same way.
+4. Buyers and Sellers, each sorted alphabetically, are matched in order. The extra student is placed as in step 4 of Used Car drafting.
 5. **Writing:**
-   - The condition goes in a `CONDITION` column added next to the draft table.
-   - At the absence step, a stranded student joins the nearest earlier match **in the same condition** (or the next one). If there's none, she places them. Placing across conditions is a warning.
-   - The final table then gets each student's `Gender` (from the class list) and the `Intervention` column (their condition, for absent students too).
-6. **BCC lists:** four of them, Buyer-I, Buyer-C, Seller-I, Seller-C.
+   - The Seller's condition goes in a `CONDITION` column added next to the draft table, on the Seller's row.
+   - At the absence step, conditions don't decide anything (Meeting 5). A stranded student joins the match just before in the same role, but among students in the same research-consent group where possible. Placing someone across groups is a warning. *(Assumption.)*
+   - The final table then gets each student's `Gender` (from the class list) and the `Intervention` column (the Seller's condition, for absent Sellers too).
+6. **BCC lists:** three of them, Buyer, Seller-I, Seller-C. Sellers without consent are on the Seller-C list (the standard packet). *(Assumption.)*
 
 Not built yet: swapping roles between two stranded students who both declined consent, which Meeting 4 allows.
 
